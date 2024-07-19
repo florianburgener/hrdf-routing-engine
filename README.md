@@ -1,5 +1,9 @@
 # HRDF Routing Engine
 
+## Prerequisites
+
+* OpenSSL (`apt install libssl-dev` on Ubuntu)
+
 TODO :
 * Refactoring
   * Seperate parser and the rest
