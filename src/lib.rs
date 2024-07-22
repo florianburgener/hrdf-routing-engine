@@ -20,7 +20,6 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
         "https://opentransportdata.swiss/en/dataset/timetable-54-2024-hrdf/permalink",
         false,
         true,
-        true,
     )
     .await?;
 

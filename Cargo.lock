@@ -71,21 +71,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "async-bincode"
-version = "0.7.2"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "21849a990d47109757e820904d7c0b569a8013f6595bf14d911884634d58795f"
-dependencies = [
- "bincode",
- "byteorder",
- "bytes",
- "futures-core",
- "futures-sink",
- "serde",
- "tokio",
-]
-
-[[package]]
 name = "async-trait"
 version = "0.1.81"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -649,7 +634,6 @@ dependencies = [
 name = "hrdf-parser"
 version = "0.1.0"
 dependencies = [
- "async-bincode",
  "bincode",
  "chrono",
  "regex",
