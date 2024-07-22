@@ -4,6 +4,10 @@ mod routing;
 mod service;
 mod utils;
 
+pub use isochrone::compute_isochrones;
+pub use routing::find_reachable_stops_within_time_limit;
+pub use routing::plan_journey;
+
 use std::{env, error::Error};
 
 use debug::run_debug;
@@ -14,6 +18,7 @@ pub async fn run() -> Result<(), Box<dyn Error>> {
     let hrdf = Hrdf::new(
         Version::V_5_40_41_2_0_5,
         "https://opentransportdata.swiss/en/dataset/timetable-54-2024-hrdf/permalink",
+        false,
         true,
     )
     .await?;
