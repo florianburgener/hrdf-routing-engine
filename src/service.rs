@@ -42,8 +42,8 @@ struct MetadataResponse {
 
 async fn metadata(hrdf: Arc<Hrdf>) -> Json<MetadataResponse> {
     Json(MetadataResponse {
-        start_date: timetable_start_date(hrdf.data_storage().timetable_metadata()),
-        end_date: timetable_end_date(hrdf.data_storage().timetable_metadata()),
+        start_date: timetable_start_date(hrdf.data_storage().timetable_metadata()).unwrap(),
+        end_date: timetable_end_date(hrdf.data_storage().timetable_metadata()).unwrap(),
     })
 }
 
@@ -64,8 +64,8 @@ async fn compute_isochrones(
 ) -> Result<Json<IsochroneMap>, StatusCode> {
     // The coordinates are not checked but should be.
 
-    let start_date = timetable_start_date(hrdf.data_storage().timetable_metadata());
-    let end_date = timetable_end_date(hrdf.data_storage().timetable_metadata());
+    let start_date = timetable_start_date(hrdf.data_storage().timetable_metadata()).unwrap();
+    let end_date = timetable_end_date(hrdf.data_storage().timetable_metadata()).unwrap();
 
     if params.departure_date < start_date || params.departure_date > end_date {
         // The departure date is outside the possible dates for the timetable.
@@ -82,7 +82,9 @@ async fn compute_isochrones(
         return Err(StatusCode::BAD_REQUEST);
     }
 
-    let isochrones = isochrone::compute_isochrones(
+    use std::time::Instant;
+    let now = Instant::now();
+    let result = isochrone::compute_isochrones(
         &hrdf,
         params.origin_point_latitude,
         params.origin_point_longitude,
@@ -92,5 +94,7 @@ async fn compute_isochrones(
         IsochroneDisplayMode::from_str(&params.display_mode).unwrap(),
         false,
     );
-    Ok(Json(isochrones))
+    let elapsed = now.elapsed();
+    println!("Elapsed: {:.2?}", elapsed);
+    Ok(Json(result))
 }

@@ -236,7 +236,7 @@ fn exchange_time_journey_pair(
     // "- 1" to obtain an index.
     let index = 2 + count_days_between_two_dates(
         departure_at.date(),
-        timetable_end_date(data_storage.timetable_metadata()),
+        timetable_end_date(data_storage.timetable_metadata()).unwrap(),
     ) - 1;
 
     for &id in exchange_times {
