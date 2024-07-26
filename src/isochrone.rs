@@ -117,6 +117,8 @@ pub fn compute_isochrones(
         isochrones.push(Isochrone::new(polygons, time_limit.num_minutes() as u32));
     }
 
+    println!("Done");
+
     IsochroneMap::new(
         isochrones,
         departure_stop_coord,

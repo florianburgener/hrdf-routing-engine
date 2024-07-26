@@ -20,6 +20,8 @@ pub fn create_grid(
     let num_points_y =
         ((bounding_box.1 .1 - bounding_box.0 .1) / GRID_SPACING_IN_METERS).ceil() as usize;
 
+    println!("A");
+
     let mut y = bounding_box.0 .1;
     for _ in 0..num_points_y {
         let mut x = bounding_box.0 .0;
@@ -31,6 +33,8 @@ pub fn create_grid(
 
         y += GRID_SPACING_IN_METERS;
     }
+
+    println!("B");
 
     let grid = grid
         .par_iter()
@@ -47,6 +51,9 @@ pub fn create_grid(
             (coord1, duration)
         })
         .collect();
+
+    println!("C");
+
     (grid, num_points_x, num_points_y)
 }
 
