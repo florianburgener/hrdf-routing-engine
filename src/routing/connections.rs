@@ -61,11 +61,13 @@ pub fn next_departures<'a>(
         (journeys, max_departure_at)
     }
 
-    let (journeys_1, mut findaname) =
+    let (journeys_1, mut max_depearture_at_journeys_1_adjusted) =
         get_journeys(data_storage, departure_at.date(), departure_stop_id);
-    findaname = findaname.checked_add_signed(Duration::hours(-4)).unwrap();
+    max_depearture_at_journeys_1_adjusted = max_depearture_at_journeys_1_adjusted
+        .checked_add_signed(Duration::hours(-4))
+        .unwrap();
 
-    let (journeys_2, max_departure_at) = if departure_at > findaname {
+    let (journeys_2, max_departure_at) = if departure_at > max_depearture_at_journeys_1_adjusted {
         // The journeys of the next day are also loaded.
         // The maximum departure time is 08:00 the next day.
         let departure_date = add_1_day(departure_at.date());
