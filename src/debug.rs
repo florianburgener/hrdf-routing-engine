@@ -16,8 +16,8 @@ pub fn run_debug(hrdf: Hrdf) {
     println!("--- Debug");
     println!("------------------------------------------------------------------------------------------------");
 
-    // test_plan_journey(&hrdf);
-    test_find_reachable_stops_within_time_limit(&hrdf);
+    test_plan_journey(&hrdf);
+    // test_find_reachable_stops_within_time_limit(&hrdf);
 }
 
 #[allow(dead_code)]
@@ -33,8 +33,8 @@ fn test_plan_journey(hrdf: &Hrdf) {
     for i in 0..N {
         let verbose = i == 0;
 
-        // 1. Petit-Lancy, Les Esserts => Onex, Bandol
-        plan_journey(hrdf, 8587418, 8593027, create_date_time(2024, 6, 1, 12, 30), verbose);
+        // // 1. Petit-Lancy, Les Esserts => Onex, Bandol
+        // plan_journey(hrdf, 8587418, 8593027, create_date_time(2024, 6, 1, 12, 30), verbose);
 
         // // 2. Petit-Lancy, Les Esserts => Genève-Aéroport
         // plan_journey(hrdf, 8587418, 8501026, create_date_time(2024, 2, 9, 14, 2), verbose);
@@ -60,8 +60,8 @@ fn test_plan_journey(hrdf: &Hrdf) {
         // // 9. Chancy, Douane => Campocologno
         // plan_journey(hrdf, 8587477, 8509368, create_date_time(2024, 5, 29, 17, 29), verbose);
 
-        // // 10. Chancy, Douane => Sevelen, Post
-        // plan_journey(hrdf, 8587477, 8588197, create_date_time(2024, 9, 10, 13, 37), verbose);
+        // 10. Chancy, Douane => Sevelen, Post
+        plan_journey(hrdf, 8587477, 8588197, create_date_time(2024, 9, 10, 13, 37), verbose);
     }
 
     println!("\n{:.2?}", start_time.elapsed() / N);
@@ -71,8 +71,8 @@ fn test_plan_journey(hrdf: &Hrdf) {
 #[rustfmt::skip]
 fn test_find_reachable_stops_within_time_limit(hrdf: &Hrdf) {
     // // 1. Petit-Lancy, Les Esserts (8587418)
-    // let departure_stop_id = 8587418;
-    // let departure_at = create_date_time(2024, 6, 1, 12, 30);
+    let departure_stop_id = 8587418;
+    let departure_at = create_date_time(2024, 6, 1, 12, 30);
 
     // // 2. Sevelen, Post (8588197)
     // let departure_stop_id = 8588197;
@@ -107,8 +107,8 @@ fn test_find_reachable_stops_within_time_limit(hrdf: &Hrdf) {
     // let departure_at = create_date_time(2024, 5, 29, 17, 29);
 
     // 10. Chancy, Douane (8587477)
-    let departure_stop_id = 8587477;
-    let departure_at = create_date_time(2024, 9, 10, 13, 37);
+    // let departure_stop_id = 8587477;
+    // let departure_at = create_date_time(2024, 9, 10, 13, 37);
 
     for time_limit in [60, 120, 180] {
         let start_time = Instant::now();

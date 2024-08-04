@@ -6,8 +6,6 @@
 
 TODO :
 * Refactoring
-  * Errors handling
-  * unwrap => except
   * iter vs into_inter ?
   * Delete unnecessary getters
   * Clean the code
