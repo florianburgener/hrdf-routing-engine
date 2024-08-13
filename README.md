@@ -1,6 +1,6 @@
 # HRDF Routing Engine
 
-
+Public transport routing engine based on Swiss HRDF data.
 
 Author: Florian Burgener
 

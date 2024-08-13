@@ -3,6 +3,11 @@ name = "hrdf-routing-engine"
 version = "0.1.0"
 edition = "2021"
 
+license-file = "LICENSE"
+description = "Public transport routing engine based on Swiss HRDF data."
+repository = "https://github.com/florianburgener/hrdf-routing-engine"
+authors = ["Florian Burgener"]
+
 [dependencies]
 axum = "0.7.5"
 chrono = { version = "0.4.31", features = ["serde"] }
