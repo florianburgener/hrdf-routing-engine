@@ -19,9 +19,12 @@ cd hrdf-routing-engine
 
 ## Usage
 
+Starts the routing engine in debug mode:
 ```sh
-# Starts debug mode:
 cargo run --release
-# Starts the web service (port 8100):
+```
+
+Starts the routing engine in web service mode (port 8100):
+```sh
 cargo run --release -- serve
 ```
