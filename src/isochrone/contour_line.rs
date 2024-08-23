@@ -87,7 +87,7 @@ pub fn get_polygons(
         )
         .collect();
 
-    let contour_builder = ContourBuilder::new(num_points_x, num_points_y, false);
+    let contour_builder = ContourBuilder::new(num_points_x, num_points_y, true);
     let contours = contour_builder.contours(&values, &[0.5]).unwrap();
 
     contours[0]
