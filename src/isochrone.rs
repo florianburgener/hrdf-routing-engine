@@ -94,7 +94,7 @@ pub fn compute_isochrones(
     let bounding_box = get_bounding_box(&data, time_limit);
 
     let grid = if display_mode == models::DisplayMode::ContourLine {
-        Some(contour_line::create_grid(&data, bounding_box))
+        Some(contour_line::create_grid(&data, bounding_box, time_limit))
     } else {
         None
     };
