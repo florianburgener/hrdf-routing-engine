@@ -642,9 +642,9 @@ dependencies = [
 
 [[package]]
 name = "hrdf-parser"
-version = "0.1.0"
+version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3cb319f36e8f44af3d461d432438551d82e728786a8307a8cc053cd37e082ca5"
+checksum = "c29386e7c001afabfc7005377f726e9fbb0f8feec5f285bedb3c2f90961d0e4c"
 dependencies = [
  "bincode",
  "chrono",
@@ -662,7 +662,7 @@ dependencies = [
 
 [[package]]
 name = "hrdf-routing-engine"
-version = "0.2.0"
+version = "0.2.1"
 dependencies = [
  "axum",
  "chrono",
