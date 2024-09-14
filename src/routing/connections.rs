@@ -154,7 +154,12 @@ pub fn get_operating_journeys(
                         .unwrap()
                 })
                 .flatten()
-                .map(|&journey_id| data_storage.journeys().find(journey_id))
+                .map(|&journey_id| {
+                    data_storage
+                        .journeys()
+                        .find(journey_id)
+                        .unwrap_or_else(|| panic!("Journey {:?} not found.", journey_id))
+                })
                 .collect()
         })
 }
@@ -166,9 +171,18 @@ pub fn get_exchange_time(
     journey_id_2: i32,
     departure_at: NaiveDateTime,
 ) -> i16 {
-    let stop = data_storage.stops().find(stop_id);
-    let journey_1 = data_storage.journeys().find(journey_id_1);
-    let journey_2 = data_storage.journeys().find(journey_id_2);
+    let stop = data_storage
+        .stops()
+        .find(stop_id)
+        .unwrap_or_else(|| panic!("Stop {:?} not found.", stop_id));
+    let journey_1 = data_storage
+        .journeys()
+        .find(journey_id_1)
+        .unwrap_or_else(|| panic!("Journey {:?} not found.", journey_id_1));
+    let journey_2 = data_storage
+        .journeys()
+        .find(journey_id_2)
+        .unwrap_or_else(|| panic!("Journey {:?} not found.", journey_id_2));
 
     // Fahrtpaarbezogene Umsteigezeiten /-\ Journey pair-related exchange times.
     if let Some(exchange_time) = exchange_time_journey_pair(
@@ -192,6 +206,7 @@ pub fn get_exchange_time(
         return data_storage
             .exchange_times_administration()
             .find(id)
+            .unwrap_or_else(|| panic!("Exchange time administration {:?} not found.", id))
             .duration();
     }
 
@@ -215,6 +230,7 @@ pub fn get_exchange_time(
         return data_storage
             .exchange_times_administration()
             .find(id)
+            .unwrap_or_else(|| panic!("Exchange time administration {:?} not found.", id))
             .duration();
     }
 
@@ -249,10 +265,16 @@ fn exchange_time_journey_pair(
     ) - 1;
 
     for &id in exchange_times {
-        let exchange_time = data_storage.exchange_times_journey().find(id);
+        let exchange_time = data_storage
+            .exchange_times_journey()
+            .find(id)
+            .unwrap_or_else(|| panic!("Exchange time journey {:?} not found.", id));
 
         if let Some(bit_field_id) = exchange_time.bit_field_id() {
-            let bit_field = data_storage.bit_fields().find(bit_field_id);
+            let bit_field = data_storage
+                .bit_fields()
+                .find(bit_field_id)
+                .unwrap_or_else(|| panic!("Bitfield {:?} not found.", bit_field_id));
 
             if bit_field.bits()[index] == 1 {
                 return Some(exchange_time.duration());
