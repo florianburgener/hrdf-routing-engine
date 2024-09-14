@@ -83,9 +83,9 @@ fn can_explore_connections(
     let stop = if let Some(stop) = stop {
         stop
     } else {
+        log::warn!("Stop: {} not found.", stop_id);
         return false;
     };
-    // .unwrap_or_else(|| panic!("Stop {:?} not found.", stop_id));
 
     if !stop.can_be_used_as_exchange_point() {
         // The arrival stop of the last RouteSection of a journey is not necessarily usable for exchange, hence the check.
