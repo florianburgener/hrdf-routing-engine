@@ -123,6 +123,15 @@ pub struct IsochroneHectareArgsBuilder {
     /// Verbose on or off
     #[arg(short, long, default_value_t = false)]
     verbose: bool,
+    /// Latitude of the center of the area we will compute the hectare on
+    #[arg(long)]
+    latitude: Option<f64>,
+    /// Longitude of the center of the area we will compute the hectare on
+    #[arg(long)]
+    longitude: Option<f64>,
+    /// Radius of the circular area in which to consider the hectars to compute
+    #[arg(short, long)]
+    area: Option<f64>,
 }
 
 #[cfg(feature = "hectare")]
@@ -134,6 +143,9 @@ impl IsochroneHectareArgsBuilder {
             max_num_explorable_connections,
             num_starting_points,
             verbose,
+            latitude,
+            longitude,
+            area,
         } = self;
 
         Ok(IsochroneHectareArgs {
@@ -142,6 +154,9 @@ impl IsochroneHectareArgsBuilder {
             max_num_explorable_connections,
             num_starting_points,
             verbose,
+            center_latitude: latitude,
+            center_longitude: longitude,
+            center_area: area,
         })
     }
 }

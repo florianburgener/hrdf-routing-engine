@@ -5,6 +5,7 @@ use std::path::Path;
 
 use geo::{BooleanOps, MultiPolygon, Polygon};
 use geojson::{FeatureCollection, GeoJson};
+use longitude::{Distance, Location};
 use serde::{Deserialize, Serialize};
 use sha2::{Digest, Sha256};
 use url::Url;
@@ -177,6 +178,9 @@ impl HectareData {
         url_or_path: &str,
         force_rebuild_cache: bool,
         cache_prefix: Option<String>,
+        center_longitude: Option<f64>,
+        center_latitude: Option<f64>,
+        area_radius: Option<f64>,
     ) -> RResult<Self> {
         let unique_filename = format!("{:x}", Sha256::digest(url_or_path.as_bytes()));
         let cache_path = format!(
@@ -248,7 +252,15 @@ impl HectareData {
             hectare
         };
 
-        Ok(hectare)
+        // then filter hectares according to the requested area and return the resulting collection
+        let filtered_hectares = if(center_latitude.is_some() && center_longitude.is_some() && area_radius.is_some()){
+            Self{
+                data: hectare.data.iter().filter(|&h| Location::from(center_longitude.unwrap(), center_latitude.unwrap()).distance(&Location::from(h.longitude, h.latitude)) < Distance::from_kilometers(area_radius.unwrap())).cloned().collect(),
+            }
+        }else{
+            hectare
+        };
+        Ok(filtered_hectares)
     }
 
     fn parse(decompressed_data_path: &str) -> RResult<Vec<HectareRecord>> {

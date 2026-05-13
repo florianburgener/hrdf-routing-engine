@@ -1128,6 +1128,7 @@ dependencies = [
  "hrdf-parser",
  "kd-tree",
  "log",
+ "longitude",
  "native-tls",
  "ojp-rs",
  "orx-parallel",
@@ -1622,6 +1623,16 @@ name = "log"
 version = "0.4.27"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "13dc2df351e3202783a1fe0d44375f7295ffb4049267b0f3018346dc122a1d94"
+
+[[package]]
+name = "longitude"
+version = "0.2.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e68b40964f70c84c2c729494eb8d0743269ec1b6783392cb25dfd430269c4c14"
+dependencies = [
+ "lazy_static",
+ "libm",
+]
 
 [[package]]
 name = "lru-slab"

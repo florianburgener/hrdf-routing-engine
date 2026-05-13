@@ -43,6 +43,12 @@ pub struct IsochroneHectareArgs {
     pub num_starting_points: usize,
     /// Verbose on or off
     pub verbose: bool,
+    /// Option of latitude
+    pub center_latitude: Option<f64>,
+    /// Option of longitude
+    pub center_longitude: Option<f64>,
+    /// Option of area
+    pub center_area: Option<f64>,
 }
 
 #[derive(Debug, Clone)]

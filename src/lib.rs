@@ -337,6 +337,9 @@ mod tests {
             url,
             true,
             Some(env::temp_dir().to_string_lossy().to_string()),
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create new hectare data from online data");
@@ -344,6 +347,9 @@ mod tests {
             url,
             false,
             Some(env::temp_dir().to_string_lossy().to_string()),
+            None,
+            None,
+            None,
         )
         .await
         .expect("Failed to create new polygons from cached");

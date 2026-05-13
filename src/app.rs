@@ -134,6 +134,9 @@ pub fn run_surface_per_ha(
                     max_num_explorable_connections,
                     num_starting_points,
                     verbose,
+                    center_latitude: _center_latitude,
+                    center_longitude: _center_longitude,
+                    center_area: _center_area,
                 } = isochrone_args;
                 let isochrone_args = IsochroneArgs {
                     latitude,

@@ -21,6 +21,7 @@ geojson = "0.24.2"
 hrdf-parser = "0.9.2"
 kd-tree = "0.6.0"
 log = "0.4.22"
+longitude = "0.2.2"
 # For -Zminimal-versions
 native-tls = "0.2.14"
 orx-parallel = "3.1.0"

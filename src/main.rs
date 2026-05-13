@@ -200,7 +200,9 @@ async fn main() -> Result<(), Box<dyn Error>> {
 
             let isochrone_args = isochrone_args.finalize()?;
             let hectare =
-                HectareData::new(&url, cli.force_rebuild, cli.cache_prefix.clone()).await?;
+                HectareData::new(&url, cli.force_rebuild, cli.cache_prefix.clone(),
+                                 isochrone_args.center_longitude, isochrone_args.center_latitude,
+                                 isochrone_args.center_area).await?;
             let hrdf_2026 = Hrdf::try_from_date(
                 isochrone_args.departure_at.date(),
                 cli.force_rebuild,
