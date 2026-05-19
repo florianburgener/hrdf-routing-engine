@@ -1,6 +1,6 @@
 [package]
 name = "hrdf-routing-engine"
-version = "0.7.0"
+version = "0.7.1"
 authors = ["Florian Burgener", "Orestis Malaspinas"]
 edition = "2024"
 description = "Public transport routing engine based on Swiss HRDF data."
@@ -18,7 +18,7 @@ flate2 = "1.0.35"
 futures = "0.3.31"
 geo = "0.32.0"
 geojson = "0.24.2"
-hrdf-parser = "0.9.2"
+hrdf-parser = "0.9.4"
 kd-tree = "0.6.0"
 log = "0.4.22"
 # For -Zminimal-versions
