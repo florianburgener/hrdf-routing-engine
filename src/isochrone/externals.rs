@@ -253,7 +253,7 @@ impl HectareData {
         };
 
         // then filter hectares according to the requested area and return the resulting collection
-        let filtered_hectares = if(center_latitude.is_some() && center_longitude.is_some() && area_radius.is_some()){
+        let filtered_hectares = if center_latitude.is_some() && center_longitude.is_some() && area_radius.is_some() {
             Self{
                 data: hectare.data.iter().filter(|&h| Location::from(center_longitude.unwrap(), center_latitude.unwrap()).distance(&Location::from(h.longitude, h.latitude)) < Distance::from_kilometers(area_radius.unwrap())).cloned().collect(),
             }
@@ -314,7 +314,7 @@ pub struct HectareRecord {
     pub longitude: f64,
     pub latitude: f64,
     pub population: u64,
-    pub area: Option<f64>,
+    pub area: Option<Vec<(f64, f64, f64)>>,
 }
 
 #[cfg(test)]
@@ -369,14 +369,14 @@ mod tests {
                 longitude: 6.14,
                 latitude: 46.21,
                 population: 1000,
-                area: Some(100.0),
+                area: Some(vec!((100.0, 100.0, 100.0))),
             },
             HectareRecord {
                 reli: 2,
                 longitude: 7.44,
                 latitude: 46.95,
                 population: 2000,
-                area: Some(150.0),
+                area: Some(vec!((150.0, 150.0, 150.0))),
             },
         ];
 

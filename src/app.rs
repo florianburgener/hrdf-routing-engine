@@ -1,7 +1,7 @@
 use orx_parallel::*;
 use std::time::Instant;
 
-use crate::isochrone::{self, IsochroneDisplayMode, compute_isochrones};
+use crate::isochrone::{self, IsochroneDisplayMode, compute_isochrones, compute_median_isochrones};
 use crate::{IsochroneArgs, RResult};
 use chrono::Duration;
 use geo::MultiPolygon;
@@ -91,7 +91,7 @@ pub fn run_average(
 #[cfg(feature = "hectare")]
 #[allow(clippy::too_many_arguments)]
 pub fn run_surface_per_ha(
-    hrdf: Hrdf,
+    req_hrdf: Vec<Hrdf>,
     excluded_polygons: MultiPolygon,
     hectare: HectareData,
     isochrone_args: IsochroneHectareArgs,
@@ -116,9 +116,9 @@ pub fn run_surface_per_ha(
                 latitude,
                 population,
                 area,
-            } = record;
+            } = record.clone();
 
-            let verbose =  isochrone_args.verbose;
+            let verbose = isochrone_args.verbose;
             if verbose {
                 log::info!("Computing max area for {reli} (longitude, latitude) = ({longitude}, {latitude}");
             }
@@ -137,27 +137,48 @@ pub fn run_surface_per_ha(
                     center_latitude: _center_latitude,
                     center_longitude: _center_longitude,
                     center_area: _center_area,
-                } = isochrone_args;
-                let isochrone_args = IsochroneArgs {
-                    latitude,
-                    longitude,
-                    departure_at,
-                    time_limit,
-                    interval: time_limit,
-                    max_num_explorable_connections,
-                    num_starting_points,
-                    verbose: !verbose,
-                };
-                let opt_iso = compute_optimal_isochrones(
-                    &hrdf,
-                    &excluded_polygons,
-                    isochrone_args,
-                    delta_time,
-                    display_mode,
-                    inner_threads(num_threads, true)
-                );
+                } = isochrone_args.clone();
 
-                let area = opt_iso.compute_max_area();
+                let area: Vec<(f64, f64, f64)> = departure_at.iter().zip(req_hrdf.iter()).map(|(departure_time, hrdf)| {
+                    let isochrone_args = IsochroneArgs {
+                        latitude,
+                        longitude,
+                        departure_at: departure_time.clone(),
+                        time_limit,
+                        interval: time_limit,
+                        max_num_explorable_connections,
+                        num_starting_points,
+                        verbose: false,
+                    };
+                    let opt_iso = compute_optimal_isochrones(
+                        &hrdf,
+                        &excluded_polygons,
+                        isochrone_args.clone(),
+                        delta_time,
+                        display_mode,
+                        inner_threads(num_threads, true),
+                    );
+
+                    let max_area = opt_iso.compute_max_area();
+                    let worst_iso = compute_worst_isochrones(
+                        &hrdf,
+                        &excluded_polygons,
+                        isochrone_args.clone(),
+                        delta_time,
+                        display_mode,
+                        inner_threads(num_threads, true),
+                    );
+                    let min_area = worst_iso.compute_max_area();
+                    let avg_iso = compute_median_isochrones(
+                        &hrdf,
+                        &excluded_polygons,
+                        isochrone_args.clone(),
+                        delta_time,
+                        num_threads,
+                    );
+                    let avg_area = avg_iso.compute_max_area();
+                    (max_area, avg_area, min_area)
+                }).collect();
                 HectareRecord {
                     reli,
                     longitude,
@@ -169,8 +190,7 @@ pub fn run_surface_per_ha(
             if verbose {
                 let time = start.elapsed();
                 {
-
-                    let  elapsed = total_time.read().unwrap().elapsed();
+                    let elapsed = total_time.read().unwrap().elapsed();
                     {
                         let mut w = locked_counter.write().unwrap();
                         *w += 1;

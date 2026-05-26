@@ -203,14 +203,19 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 HectareData::new(&url, cli.force_rebuild, cli.cache_prefix.clone(),
                                  isochrone_args.center_longitude, isochrone_args.center_latitude,
                                  isochrone_args.center_area).await?;
-            let hrdf_2026 = Hrdf::try_from_date(
-                isochrone_args.departure_at.date(),
-                cli.force_rebuild,
-                cli.cache_prefix.clone(),
-            )
-            .await?;
+
+            let mut req_hrdf: Vec<Hrdf> = vec![];
+            for dep in &isochrone_args.departure_at {
+                let hrdf_2026 = Hrdf::try_from_date(
+                    dep.date(),
+                    cli.force_rebuild,
+                    cli.cache_prefix.clone(),
+                )
+                    .await?;
+                req_hrdf.push(hrdf_2026);
+            }
             let surfaces = run_surface_per_ha(
-                hrdf_2026,
+                req_hrdf,
                 excluded_polygons,
                 hectare,
                 isochrone_args.clone(),
@@ -222,7 +227,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let data = serde_json::to_string_pretty(&surfaces).unwrap();
             let fname = format!(
                 "hectare_{}_{}.json",
-                isochrone_args.departure_at, isochrone_args.time_limit
+                isochrone_args.departure_at.first().unwrap(), isochrone_args.time_limit
             );
             let mut f = File::create(&fname).expect("Unable to create file");
             f.write_all(data.as_bytes()).expect("Unable to write data");

@@ -109,8 +109,8 @@ impl JourneyArgsBuilder {
 #[derive(Parser, Debug)]
 pub struct IsochroneHectareArgsBuilder {
     /// Departure date and time
-    #[arg(short, long, default_value_t = String::from("2025-04-10 07:30:00"))]
-    departure_at: String,
+    #[arg(short, long, default_values_t = vec!(String::from("2025-04-10 07:30:00")) )]
+    departure_at: Vec<String>,
     /// Maximum time of the isochrone in minutes
     #[arg(short, long, default_value_t = 60)]
     time_limit: i64,
@@ -131,7 +131,7 @@ pub struct IsochroneHectareArgsBuilder {
     longitude: Option<f64>,
     /// Radius of the circular area in which to consider the hectars to compute
     #[arg(short, long)]
-    area: Option<f64>,
+    radius: Option<f64>,
 }
 
 #[cfg(feature = "hectare")]
@@ -145,11 +145,11 @@ impl IsochroneHectareArgsBuilder {
             verbose,
             latitude,
             longitude,
-            area,
+            radius: area,
         } = self;
 
         Ok(IsochroneHectareArgs {
-            departure_at: NaiveDateTime::parse_from_str(&departure_at, "%Y-%m-%d %H:%M:%S")?,
+            departure_at: departure_at.iter().map(|d| NaiveDateTime::parse_from_str(&d, "%Y-%m-%d %H:%M:%S").unwrap()).collect(),
             time_limit: Duration::minutes(time_limit),
             max_num_explorable_connections,
             num_starting_points,
