@@ -20,8 +20,8 @@ use hrdf_parser::{CoordinateSystem, Coordinates, DataStorage, Hrdf, Stop};
 pub use models::DisplayMode as IsochroneDisplayMode;
 pub use models::IsochroneMap;
 
-use chrono::{Duration, NaiveDateTime};
-
+use chrono::{Duration, NaiveDateTime, TimeDelta};
+use longitude::Distance;
 use models::Isochrone;
 use orx_parallel::*;
 use utils::lv95_to_wgs84;
@@ -34,7 +34,7 @@ use self::utils::wgs84_to_lv95;
 #[derive(Clone, Debug)]
 pub struct IsochroneHectareArgs {
     /// Departure date and time
-    pub departure_at: NaiveDateTime,
+    pub departure_at: Vec<NaiveDateTime>,
     /// Maximum time of the isochrone in minutes
     pub time_limit: Duration,
     /// Maximum number of connections
@@ -229,6 +229,302 @@ pub fn compute_worst_isochrones(
 /// The departure date and time must be within the timetable period.
 #[allow(clippy::too_many_arguments)]
 pub fn compute_average_isochrones(
+    hrdf: &Hrdf,
+    excluded_polygons: &MultiPolygon,
+    isochrone_args: IsochroneArgs,
+    delta_time: Duration,
+    num_threads: usize,
+) -> IsochroneMap {
+    let IsochroneArgs {
+        latitude,
+        longitude,
+        departure_at,
+        time_limit,
+        interval: isochrone_interval,
+        max_num_explorable_connections,
+        num_starting_points,
+        verbose,
+    } = isochrone_args;
+
+    if verbose {
+        log::info!(
+            "Computing average isochrone:\n longitude: {longitude}, latitude: {latitude},  departure_at: {departure_at}, time_limit: {}, isochrone_interval: {}, delta_time: {}, verbose: {verbose}",
+            time_limit.num_minutes(),
+            isochrone_interval.num_minutes(),
+            delta_time.num_minutes()
+        );
+    }
+    // If there is no departue stop found we just use the default
+    let departure_coord = Coordinates::new(CoordinateSystem::WGS84, longitude, latitude);
+
+    let (easting, northing) = wgs84_to_lv95(latitude, longitude);
+    let departure_coord_lv95 = Coordinates::new(CoordinateSystem::LV95, easting, northing);
+
+    let start_time = Instant::now();
+    let min_date_time = departure_at - delta_time;
+    let max_date_time = departure_at + delta_time;
+
+    let data = NaiveDateTimeRange::new(min_date_time, max_date_time, Duration::minutes(1))
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    let data = data
+        .par()
+        .num_threads(num_threads)
+        .map(|dep| {
+            let routes = compute_routes_from_origin(
+                hrdf,
+                latitude,
+                longitude,
+                *dep,
+                time_limit,
+                num_starting_points,
+                inner_threads(num_threads, true),
+                max_num_explorable_connections,
+                verbose,
+            );
+
+            unique_coordinates_from_routes(&routes, departure_at)
+        })
+        .collect::<Vec<_>>();
+    let bounding_box = data.iter().fold(
+        ((f64::MAX, f64::MAX), (f64::MIN, f64::MIN)),
+        |cover_bb, d| {
+            let bb = get_bounding_box(d, time_limit);
+            let x0 = f64::min(cover_bb.0.0, bb.0.0);
+            let x1 = f64::max(cover_bb.1.0, bb.1.0);
+            let y0 = f64::min(cover_bb.0.1, bb.0.1);
+            let y1 = f64::max(cover_bb.1.1, bb.1.1);
+            ((x0, y0), (x1, y1))
+        },
+    );
+
+    let dx = 100.0;
+    let mut grids = data
+        .into_iter()
+        .map(|d| contour_line::create_grid(&d, bounding_box, time_limit, dx, num_threads))
+        .collect::<Vec<_>>();
+    let timesteps = grids.len();
+    let grid_ini = grids.pop().expect("Grids was empty");
+    let (total_grid, nx, ny, dx) = grids
+            .into_iter()
+            .fold(grid_ini, |(total, nx, ny, dx), (g, _, _, _)| {
+                let new_grid = g
+                    .into_iter()
+                    .zip(total)
+                    .map(|((lc, ld), (_, rd))| (lc, (rd + ld)))
+                    .collect::<Vec<_>>();
+                (new_grid, nx, ny, dx)
+            });
+    let avg_grid = total_grid
+        .into_iter()
+        .map(|(c, d)| (c, d / timesteps as i32))
+        .collect::<Vec<_>>();
+
+    let isochrone_count = time_limit.num_minutes() / isochrone_interval.num_minutes();
+    let isochrones = (0..isochrone_count)
+        .map(|i| {
+            let current_time_limit = Duration::minutes(isochrone_interval.num_minutes() * (i + 1));
+
+            let polygons = contour_line::get_polygons(
+                &avg_grid,
+                nx,
+                ny,
+                bounding_box.0,
+                current_time_limit,
+                dx,
+            );
+
+            let polygons = MultiPolygon(polygons.into_iter().collect());
+            let polygons = polygons.difference(excluded_polygons);
+            Isochrone::new(polygons, current_time_limit.num_minutes() as u32)
+        })
+        .collect::<Vec<_>>();
+
+    let areas = isochrones.iter().map(|i| i.compute_area()).collect();
+    let max_distances = isochrones
+        .iter()
+        .map(|i| {
+            let ((x, y), max) = i.compute_max_distance(departure_coord_lv95);
+            let (w_x, w_y) = lv95_to_wgs84(x, y);
+            ((w_x, w_y), max)
+        })
+        .collect();
+
+    if verbose {
+        log::info!(
+            "Time for finding the isochrones : {:.2?}",
+            start_time.elapsed()
+        );
+    }
+    IsochroneMap::new(
+        isochrones,
+        areas,
+        max_distances,
+        departure_coord,
+        departure_at,
+        convert_bounding_box_to_wgs84(bounding_box),
+    )
+}
+
+/// Computes the average isochrone.
+/// The point of origin is used to find the departure stop (the nearest stop).
+/// The departure date and time must be within the timetable period.
+#[allow(clippy::too_many_arguments)]
+pub fn compute_median_isochrones(
+    hrdf: &Hrdf,
+    excluded_polygons: &MultiPolygon,
+    isochrone_args: IsochroneArgs,
+    delta_time: Duration,
+    num_threads: usize,
+) -> IsochroneMap {
+    let IsochroneArgs {
+        latitude,
+        longitude,
+        departure_at,
+        time_limit,
+        interval: isochrone_interval,
+        max_num_explorable_connections,
+        num_starting_points,
+        verbose,
+    } = isochrone_args;
+
+    if verbose {
+        log::info!(
+            "Computing average isochrone:\n longitude: {longitude}, latitude: {latitude},  departure_at: {departure_at}, time_limit: {}, isochrone_interval: {}, delta_time: {}, verbose: {verbose}",
+            time_limit.num_minutes(),
+            isochrone_interval.num_minutes(),
+            delta_time.num_minutes()
+        );
+    }
+    // If there is no departue stop found we just use the default
+    let departure_coord = Coordinates::new(CoordinateSystem::WGS84, longitude, latitude);
+
+    let (easting, northing) = wgs84_to_lv95(latitude, longitude);
+    let departure_coord_lv95 = Coordinates::new(CoordinateSystem::LV95, easting, northing);
+
+    let start_time = Instant::now();
+    let min_date_time = departure_at - delta_time;
+    let max_date_time = departure_at + delta_time;
+
+    let data = NaiveDateTimeRange::new(min_date_time, max_date_time, Duration::minutes(1))
+        .into_iter()
+        .collect::<Vec<_>>();
+
+    let data = data
+        .par()
+        .num_threads(num_threads)
+        .map(|dep| {
+            let routes = compute_routes_from_origin(
+                hrdf,
+                latitude,
+                longitude,
+                *dep,
+                time_limit,
+                num_starting_points,
+                inner_threads(num_threads, true),
+                max_num_explorable_connections,
+                verbose,
+            );
+
+            unique_coordinates_from_routes(&routes, departure_at)
+        })
+        .collect::<Vec<_>>();
+    let bounding_box = data.iter().fold(
+        ((f64::MAX, f64::MAX), (f64::MIN, f64::MIN)),
+        |cover_bb, d| {
+            let bb = get_bounding_box(d, time_limit);
+            let x0 = f64::min(cover_bb.0.0, bb.0.0);
+            let x1 = f64::max(cover_bb.1.0, bb.1.0);
+            let y0 = f64::min(cover_bb.0.1, bb.0.1);
+            let y1 = f64::max(cover_bb.1.1, bb.1.1);
+            ((x0, y0), (x1, y1))
+        },
+    );
+
+    let dx = 100.0;
+    let mut grids = data
+        .into_iter()
+        .map(|d| contour_line::create_grid(&d, bounding_box, time_limit, dx, num_threads))
+        .collect::<Vec<_>>();
+    let timesteps = grids.len();
+    let grid_ini = grids.pop().expect("Grids was empty");
+    let grid_aggregator = (
+        grid_ini.0.into_iter().map(|(c, d)| (c, vec![d])).collect(),
+        grid_ini.1,
+        grid_ini.2,
+        grid_ini.3,
+    );
+    let (complete_grid, nx, ny, dx) =
+        grids
+            .into_iter()
+            .fold(grid_aggregator, |(total, nx, ny, dx), (g, _, _, _)| {
+                let new_grid = g
+                    .into_iter()
+                    .zip(total)
+                    .map(|((lc, ld), (_ , mut rd)): ((Coordinates, Duration), (Coordinates, Vec<Duration>))| {rd.push(ld);(lc, rd)})
+                    .collect::<Vec<_>>();
+                (new_grid, nx, ny, dx)
+            });
+    let med_grid = complete_grid
+        .into_iter()
+        .map(|(c, mut d)| {
+            d.sort();
+            (c, *d.get(d.len()/2).unwrap())
+        })
+        .collect::<Vec<_>>();
+
+    let isochrone_count = time_limit.num_minutes() / isochrone_interval.num_minutes();
+    let isochrones = (0..isochrone_count)
+        .map(|i| {
+            let current_time_limit = Duration::minutes(isochrone_interval.num_minutes() * (i + 1));
+
+            let polygons = contour_line::get_polygons(
+                &med_grid,
+                nx,
+                ny,
+                bounding_box.0,
+                current_time_limit,
+                dx,
+            );
+
+            let polygons = MultiPolygon(polygons.into_iter().collect());
+            let polygons = polygons.difference(excluded_polygons);
+            Isochrone::new(polygons, current_time_limit.num_minutes() as u32)
+        })
+        .collect::<Vec<_>>();
+
+    let areas = isochrones.iter().map(|i| i.compute_area()).collect();
+    let max_distances = isochrones
+        .iter()
+        .map(|i| {
+            let ((x, y), max) = i.compute_max_distance(departure_coord_lv95);
+            let (w_x, w_y) = lv95_to_wgs84(x, y);
+            ((w_x, w_y), max)
+        })
+        .collect();
+
+    if verbose {
+        log::info!(
+            "Time for finding the isochrones : {:.2?}",
+            start_time.elapsed()
+        );
+    }
+    IsochroneMap::new(
+        isochrones,
+        areas,
+        max_distances,
+        departure_coord,
+        departure_at,
+        convert_bounding_box_to_wgs84(bounding_box),
+    )
+}
+
+/// Computes the average isochrone.
+/// The point of origin is used to find the departure stop (the nearest stop).
+/// The departure date and time must be within the timetable period.
+#[allow(clippy::too_many_arguments)]
+pub fn compute_diff_isochrones(
     hrdf: &Hrdf,
     excluded_polygons: &MultiPolygon,
     isochrone_args: IsochroneArgs,
