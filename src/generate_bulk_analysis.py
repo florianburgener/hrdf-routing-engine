@@ -6,8 +6,9 @@ from choropleth_generator import generate_img_from_hectare
 from compute_hectare_display_values import load_and_update_hectare
 
 if __name__ == "__main__":
-    generate_img = False
+    generate_img = True
     generate_stats = True
+    print_stat = False
     wanted_percentiles = 20
     fns = []
     if len(sys.argv) >= 2:
@@ -30,16 +31,28 @@ if __name__ == "__main__":
         for i in range(nb):
             for base in ["max", "mid", "min"]:
                 attribute = "diff_" + base + "_" + str(i)
-                if generate_stats:
+                if generate_stats or print_stat:
                     hectares.sort(key= lambda v : v[attribute])
                     total_hectares = len(hectares)
-                    print(f"Highest loss : {hectares[0][attribute]}")
-                    print(f"Highest increase : {hectares[-1][attribute]}")
-                    print(f"Median : {hectares[total_hectares//2][attribute]}")
-                    print(f"Average: {sum(v[attribute] for v in hectares)/total_hectares}")
-                    print(f"For the percentile | we have at most won | m²")
-                    print(f"_____________________________________________")
+                    lines = ""
+                    lines += f"Highest loss : {hectares[0][attribute]}\n"
+                    lines += f"Highest increase : {hectares[-1][attribute]}\n"
+                    lines += f"Median : {hectares[total_hectares//2][attribute]}\n"
+                    lines += f"Average: {sum(v[attribute] for v in hectares)/total_hectares}\n"
+                    lines += f"Winning hectares: {sum(1 for v in hectares if v[attribute] > 0)}\n"
+                    lines += f"Losing hectares: {sum(1 for v in hectares if v[attribute] < 0)}\n"
+                    lines += f"For the percentile | we have at most won | m²\n"
+                    lines += f"_____________________________________________\n"
                     for p in range(wanted_percentiles):
-                        print(f"{p*100/wanted_percentiles}% | {hectares[(total_hectares * p)//wanted_percentiles][attribute]} m²")
+                        p_line = f"{p * 100 / wanted_percentiles}% | {hectares[(total_hectares * p) // wanted_percentiles][attribute]} m²\n"
+                        lines += p_line
+
+                    if print_stat:
+                        print(lines)
+
+                    if generate_stats:
+                        with open(fn.split(".json")[0] + "_" + attribute + ".stat", "w") as f:
+                            f.write(lines)
+
                 if generate_img:
                     generate_img_from_hectare(hectares, region_map, attribute, fn.split(".json")[0] + "_" + attribute)
