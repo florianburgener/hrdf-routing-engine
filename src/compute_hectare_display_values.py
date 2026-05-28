@@ -13,9 +13,9 @@ def load_and_update_hectare(hectare_file: str) -> tuple[list, int]:
             highest_cmp = len(h["area"])
         for i, a in enumerate(h["area"][1:]):
             max, mid, min = a
-            h["diff_max_"+str(i)] = max - previous_max
-            h["diff_mid_"+str(i)] = mid - previous_mid
-            h["diff_min_"+str(i)] = min - previous_min
+            h["diff_max_"+str(i)] = previous_max - max
+            h["diff_mid_"+str(i)] = previous_mid - mid
+            h["diff_min_"+str(i)] = previous_min - min
             previous_max, previous_mid, previous_min = a
     return hectares, highest_cmp - 1
 
