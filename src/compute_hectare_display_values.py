@@ -1,6 +1,6 @@
 import json
 
-def load_and_update_hectare(hectare_file: str) -> tuple[dict, int]:
+def load_and_update_hectare(hectare_file: str) -> tuple[list, int]:
     with open(hectare_file) as file:
         hectares = json.load(file)
 
@@ -19,7 +19,7 @@ def load_and_update_hectare(hectare_file: str) -> tuple[dict, int]:
             previous_max, previous_mid, previous_min = a
     return hectares, highest_cmp - 1
 
-def write_hectare(hectare_file: str, hectares: dict):
+def write_hectare(hectare_file: str, hectares: list):
     with open(hectare_file + "_split" + ".json", "w") as out_file:
         json.dump(hectares, out_file)
 
