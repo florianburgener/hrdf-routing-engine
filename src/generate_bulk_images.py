@@ -25,6 +25,6 @@ if __name__ == "__main__":
             print(f"File {fn} has bad format : {e}", file=sys.stderr)
             continue
         for i in range(nb):
-            for base in ["diff_max_", "diff_mid_", "diff_min_"]:
-                attribute = base + str(i)
+            for base in ["max", "mid", "min"]:
+                attribute = "diff_" + base + "_" + str(i)
                 generate_img_from_hectare(hectares, region_map, attribute, fn.split(".json")[0] + "_" + attribute)
