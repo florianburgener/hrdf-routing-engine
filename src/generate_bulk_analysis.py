@@ -142,7 +142,7 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
             f.write("\n".join(lines))
 
 
-def compute_stats(hectares, attribute, wanted_percentiles, lines, factor) -> tuple[float, float, float, float, int, int, list[float], list[str]]:
+def compute_stats(hectares, attribute, wanted_percentiles, lines, factor) -> tuple[float, float, float, float, int, int, list[float], str]:
     hectares.sort(key=lambda v: v[attribute] * factor(v))
     max_decrease = hectares[0][attribute] * factor(hectares[0])
     max_increase = hectares[-1][attribute] * factor(hectares[-1])
