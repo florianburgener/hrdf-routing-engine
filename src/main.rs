@@ -1,13 +1,8 @@
-use futures::future::join_all;
-use hrdf_routing_engine::{Cli, Mode};
-use std::error::Error;
-use std::fs::File;
-use std::io::Write;
-use std::sync::Arc;
-
 use chrono::Duration;
 use clap::Parser;
-use hrdf_parser::Hrdf;
+use futures::future::join_all;
+use hrdf_parser::{Hrdf, ModifiableTypes, RemovableTypes};
+use hrdf_routing_engine::{Cli, Mode};
 use hrdf_routing_engine::{
     ExcludedPolygons, LAKES_GEOJSON_URLS, plan_journey, run_average, run_comparison, run_debug,
     run_optimal, run_service, run_simple, run_worst,
@@ -15,6 +10,12 @@ use hrdf_routing_engine::{
 #[cfg(feature = "hectare")]
 use hrdf_routing_engine::{HectareData, run_surface_per_ha};
 use log::LevelFilter;
+use std::collections::HashMap;
+use std::error::Error;
+use std::fs::File;
+use std::io::Write;
+use std::sync::Arc;
+use std::time::Instant;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
@@ -227,7 +228,13 @@ async fn main() -> Result<(), Box<dyn Error>> {
             let data = serde_json::to_string_pretty(&surfaces).unwrap();
             let fname = format!(
                 "hectare_{}_{}.json",
-                isochrone_args.departure_at.iter().fold("".to_string(), |acc, v| acc + "_" + (v.to_string().as_str()) ), isochrone_args.time_limit
+                isochrone_args
+                    .departure_at
+                    .iter()
+                    .fold("".to_string(), |acc, v| acc
+                        + "_"
+                        + (v.to_string().as_str())),
+                isochrone_args.time_limit
             );
             let mut f = File::create(&fname).expect("Unable to create file");
             f.write_all(data.as_bytes()).expect("Unable to write data");

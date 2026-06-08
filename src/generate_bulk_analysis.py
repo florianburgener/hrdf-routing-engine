@@ -2,6 +2,7 @@ import json
 import glob
 import sys
 from dataclasses import dataclass
+from os.path import getmtime
 from typing import Any
 
 from choropleth_generator import generate_img_from_hectare
@@ -168,9 +169,10 @@ def compute_stats(hectares, attribute, wanted_percentiles, lines, factor) -> tup
 
 
 if __name__ == "__main__":
-    generate_img = False
+    generate_img = 2
     generate_stats = True
     print_stat = True
+    compute_summary = False
     wanted_percentiles = 20
     hectare_files = []
     if len(sys.argv) >= 2:
@@ -186,6 +188,8 @@ if __name__ == "__main__":
 
     summary = {}
     for hectare_file in hectare_files:
+        data_modified_time = getmtime(hectare_file)
+
         try:
             hectares, nb = load_and_update_hectare(hectare_file)
         except Exception as e:
@@ -198,7 +202,9 @@ if __name__ == "__main__":
             summary[hectare_file][i] = {}
             for base_ix, base in enumerate(["max", "mid", "min"]):
                 attribute = "diff_" + base + "_" + str(i)
-                if generate_stats or print_stat:
+                stat_filename = hectare_file.split(".json")[0] + "_" + attribute + "_" + str(i) + "_" + base + ".stat"
+                img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
+                if (generate_stats and getmtime(stat_filename) < data_modified_time) or print_stat:
                     total_hectares = len(hectares)
                     total_inhabitant = sum(v["population"] for v in hectares)
 
@@ -253,14 +259,26 @@ if __name__ == "__main__":
                                                                glob_hectares_nb=total_hectares,
                                                                )
 
-                    if generate_stats:
+                    if generate_stats and getmtime(stat_filename) < data_modified_time:
                         with open(
                                 hectare_file.split(".json")[0] + "_" + attribute + "_" + str(i) + "_" + base + ".stat",
                                 "w") as f:
                             f.write(lines)
 
                 if generate_img:
-                    generate_img_from_hectare(hectares, region_map, attribute,
-                                              hectare_file.split(".json")[0] + "_" + attribute)
+                    if getmtime(img_filename) < data_modified_time:
+                        generate_img_from_hectare(hectares, region_map, attribute,
+                                                  img_filename)
+                    if generate_img > 1:
+                        if i == 0:
+                            attribute = "area_" + str(i) + "_" + base
+                            add_img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
+                            if getmtime(add_img_filename) < data_modified_time:
+                                generate_img_from_hectare(hectares, region_map, attribute, add_img_filename)
+                        attribute = "area_" + str(i + 1) + "_" + base
+                        add_img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
+                        if getmtime(add_img_filename) < data_modified_time:
+                            generate_img_from_hectare(hectares, region_map, attribute, add_img_filename)
 
-    write_summary(summary, hectare_files, generate_stats, print_stat)
+    if compute_summary:
+        write_summary(summary, hectare_files, generate_stats, print_stat)
