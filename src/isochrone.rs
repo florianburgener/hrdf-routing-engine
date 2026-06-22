@@ -49,6 +49,8 @@ pub struct IsochroneHectareArgs {
     pub center_longitude: Option<f64>,
     /// Option of area
     pub center_area: Option<f64>,
+    /// Option filename for filters
+    pub filter_fn: Option<String>,
 }
 
 #[derive(Debug, Clone)]

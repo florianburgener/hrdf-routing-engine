@@ -11,7 +11,7 @@ mod utils;
 #[cfg(feature = "hectare")]
 pub use app::run_surface_per_ha;
 pub use app::{run_average, run_comparison, run_optimal, run_simple, run_worst};
-pub use cli::{Cli, Mode};
+pub use cli::{Cli, Mode, HrdfFilter};
 pub use debug::run_debug;
 pub use error::RResult;
 pub use isochrone::externals::{ExcludedPolygons, LAKES_GEOJSON_URLS};

@@ -2,7 +2,7 @@ use chrono::Duration;
 use clap::Parser;
 use futures::future::join_all;
 use hrdf_parser::{Hrdf, ModifiableTypes, RemovableTypes};
-use hrdf_routing_engine::{Cli, Mode};
+use hrdf_routing_engine::{Cli, Mode, HrdfFilter};
 use hrdf_routing_engine::{
     ExcludedPolygons, LAKES_GEOJSON_URLS, plan_journey, run_average, run_comparison, run_debug,
     run_optimal, run_service, run_simple, run_worst,
@@ -12,6 +12,7 @@ use hrdf_routing_engine::{HectareData, run_surface_per_ha};
 use log::LevelFilter;
 use std::collections::HashMap;
 use std::error::Error;
+use std::fs;
 use std::fs::File;
 use std::io::Write;
 use std::sync::Arc;
@@ -200,19 +201,29 @@ async fn main() -> Result<(), Box<dyn Error>> {
             use hrdf_routing_engine::IsochroneDisplayMode;
 
             let isochrone_args = isochrone_args.finalize()?;
-            let hectare =
-                HectareData::new(&url, cli.force_rebuild, cli.cache_prefix.clone(),
-                                 isochrone_args.center_longitude, isochrone_args.center_latitude,
-                                 isochrone_args.center_area).await?;
+
+            let filters: Vec<HrdfFilter> = match &isochrone_args.filter_fn {
+                None => {vec![]}
+                Some(filter_fn) => {
+                    let data_content = &fs::read_to_string(&filter_fn).expect(&*(filter_fn.to_owned() + " Should be able to read file"));
+                    serde_json::from_str(data_content).expect("Should be able to read file")
+                }
+            };
+            let hectare = HectareData::new(
+                &url,
+                cli.force_rebuild,
+                cli.cache_prefix.clone(),
+                isochrone_args.center_longitude,
+                isochrone_args.center_latitude,
+                isochrone_args.center_area,
+            )
+            .await?;
 
             let mut req_hrdf: Vec<Hrdf> = vec![];
             for dep in &isochrone_args.departure_at {
-                let hrdf_2026 = Hrdf::try_from_date(
-                    dep.date(),
-                    cli.force_rebuild,
-                    cli.cache_prefix.clone(),
-                )
-                    .await?;
+                let hrdf_2026 =
+                    Hrdf::try_from_date(dep.date(), cli.force_rebuild, cli.cache_prefix.clone())
+                        .await?;
                 req_hrdf.push(hrdf_2026);
             }
             let surfaces = run_surface_per_ha(
@@ -223,12 +234,18 @@ async fn main() -> Result<(), Box<dyn Error>> {
                 Duration::minutes(delta_time),
                 IsochroneDisplayMode::Circles,
                 cli.num_threads,
+                filters,
             )?;
 
             let data = serde_json::to_string_pretty(&surfaces).unwrap();
             let fname = format!(
-                "hectare_{}_{}.json",
+                "hectare{}_{}_{}.json",
                 isochrone_args
+                    .filter_fn
+                    .iter()
+                    .fold("".to_string(), |acc, v| acc
+                        + "_"
+                        + (v.to_string().as_str())),isochrone_args
                     .departure_at
                     .iter()
                     .fold("".to_string(), |acc, v| acc
@@ -236,6 +253,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         + (v.to_string().as_str())),
                 isochrone_args.time_limit
             );
+            log::info!("Done hectare in, time elapsed: {:?}", now.elapsed());
             let mut f = File::create(&fname).expect("Unable to create file");
             f.write_all(data.as_bytes()).expect("Unable to write data");
         }

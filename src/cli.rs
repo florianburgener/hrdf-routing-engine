@@ -1,11 +1,15 @@
+use std::collections::HashMap;
 use std::net::Ipv4Addr;
 
 use chrono::{Duration, NaiveDateTime};
 use clap::{Parser, Subcommand};
-
+use hrdf_parser::RemovableTypes;
 #[cfg(feature = "hectare")]
 use crate::IsochroneHectareArgs;
 use crate::{IsochroneArgs, IsochroneDisplayMode, JourneyArgs, RResult};
+
+use rustc_hash::FxHashMap;
+use serde::{Deserialize, Serialize};
 
 #[derive(Parser, Debug, Clone)]
 pub struct IsochroneArgsBuilder {
@@ -132,6 +136,9 @@ pub struct IsochroneHectareArgsBuilder {
     /// Radius of the circular area in which to consider the hectars to compute
     #[arg(short, long)]
     radius: Option<f64>,
+    /// Path to the file containing the required filters
+    #[arg(short, long)]
+    filter_fn: Option<String>,
 }
 
 #[cfg(feature = "hectare")]
@@ -146,6 +153,7 @@ impl IsochroneHectareArgsBuilder {
             latitude,
             longitude,
             radius: area,
+            filter_fn,
         } = self;
 
         Ok(IsochroneHectareArgs {
@@ -157,6 +165,7 @@ impl IsochroneHectareArgsBuilder {
             center_latitude: latitude,
             center_longitude: longitude,
             center_area: area,
+            filter_fn,
         })
     }
 }
@@ -261,4 +270,10 @@ pub struct Cli {
     /// What mode is used
     #[command(subcommand)]
     pub mode: Mode,
+}
+
+#[derive(Serialize, Deserialize, Default, Clone)]
+pub struct HrdfFilter {
+    pub filter_name: String,
+    pub filter: HashMap<RemovableTypes, Vec<String>>,
 }

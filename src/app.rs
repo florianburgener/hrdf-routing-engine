@@ -2,7 +2,7 @@ use orx_parallel::*;
 use std::time::Instant;
 
 use crate::isochrone::{self, IsochroneDisplayMode, compute_isochrones, compute_median_isochrones};
-use crate::{IsochroneArgs, RResult};
+use crate::{HrdfFilter, IsochroneArgs, RResult};
 use chrono::Duration;
 use geo::MultiPolygon;
 use hrdf_parser::{Coordinates, Hrdf};
@@ -98,6 +98,7 @@ pub fn run_surface_per_ha(
     delta_time: Duration,
     display_mode: IsochroneDisplayMode,
     num_threads: usize,
+    filters: Vec<HrdfFilter>,
 ) -> RResult<Vec<HectareRecord>> {
     use std::sync::RwLock;
 
@@ -137,9 +138,12 @@ pub fn run_surface_per_ha(
                     center_latitude: _center_latitude,
                     center_longitude: _center_longitude,
                     center_area: _center_area,
+                    filter_fn: _,
                 } = isochrone_args.clone();
 
-                let area: Vec<(f64, f64, f64)> = departure_at.iter().zip(req_hrdf.iter()).map(|(departure_time, hrdf)| {
+                let area: Vec<(String, Vec<(f64, f64, f64)>)> = filters.iter().map(|filter|
+                                                                                (filter.filter_name.clone(), departure_at.iter().zip(req_hrdf.iter()).map(|(departure_time, hrdf)| {
+                    let local_hrdf = hrdf.clone().filter(&filter.filter).unwrap();
                     let isochrone_args = IsochroneArgs {
                         latitude,
                         longitude,
@@ -151,7 +155,7 @@ pub fn run_surface_per_ha(
                         verbose: false,
                     };
                     let opt_iso = compute_optimal_isochrones(
-                        &hrdf,
+                        &local_hrdf,
                         &excluded_polygons,
                         isochrone_args.clone(),
                         delta_time,
@@ -161,7 +165,7 @@ pub fn run_surface_per_ha(
 
                     let max_area = opt_iso.compute_max_area();
                     let worst_iso = compute_worst_isochrones(
-                        &hrdf,
+                        &local_hrdf,
                         &excluded_polygons,
                         isochrone_args.clone(),
                         delta_time,
@@ -170,7 +174,7 @@ pub fn run_surface_per_ha(
                     );
                     let min_area = worst_iso.compute_max_area();
                     let avg_iso = compute_median_isochrones(
-                        &hrdf,
+                        &local_hrdf,
                         &excluded_polygons,
                         isochrone_args.clone(),
                         delta_time,
@@ -178,7 +182,8 @@ pub fn run_surface_per_ha(
                     );
                     let avg_area = avg_iso.compute_max_area();
                     (max_area, avg_area, min_area)
-                }).collect();
+                }).collect()
+                )).collect();
                 HectareRecord {
                     reli,
                     longitude,

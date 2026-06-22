@@ -314,7 +314,7 @@ pub struct HectareRecord {
     pub longitude: f64,
     pub latitude: f64,
     pub population: u64,
-    pub area: Option<Vec<(f64, f64, f64)>>,
+    pub area: Option<Vec<(String,Vec<(f64, f64, f64)>)>>,
 }
 
 #[cfg(test)]
@@ -369,14 +369,14 @@ mod tests {
                 longitude: 6.14,
                 latitude: 46.21,
                 population: 1000,
-                area: Some(vec!((100.0, 100.0, 100.0))),
+                area: Some(vec!((String::from(""),vec!((100.0, 100.0, 100.0))))),
             },
             HectareRecord {
                 reli: 2,
                 longitude: 7.44,
                 latitude: 46.95,
                 population: 2000,
-                area: Some(vec!((150.0, 150.0, 150.0))),
+                area: Some(vec!((String::from(""),vec!((150.0, 150.0, 150.0))))),
             },
         ];
 
