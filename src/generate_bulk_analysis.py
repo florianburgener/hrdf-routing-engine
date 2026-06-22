@@ -5,6 +5,8 @@ from dataclasses import dataclass
 from os.path import getmtime
 from typing import Any
 
+from pathlib import Path
+
 from choropleth_generator import generate_img_from_hectare
 from compute_hectare_display_values import load_and_update_hectare
 
@@ -197,88 +199,85 @@ if __name__ == "__main__":
             continue
 
         summary[hectare_file] = {}
+        available_attributes = [key for key in hectares[0].keys() if "-" in key]
 
-        for i in range(nb):
-            summary[hectare_file][i] = {}
-            for base_ix, base in enumerate(["max", "mid", "min"]):
-                attribute = "diff_" + base + "_" + str(i)
-                stat_filename = hectare_file.split(".json")[0] + "_" + attribute + "_" + str(i) + "_" + base + ".stat"
-                img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
-                if (generate_stats and getmtime(stat_filename) < data_modified_time) or print_stat:
-                    total_hectares = len(hectares)
-                    total_inhabitant = sum(v["population"] for v in hectares)
+        for i, attribute in enumerate(available_attributes):
+            # for i in range(nb):
+                summary[hectare_file][i] = {}
+                for base_ix, base in enumerate(["max", "mid", "min"]):
+                    # attribute = attribute.split("_")[0] + "_diff_" + base + "_" + str(i)
+                    stat_filename = hectare_file.split(".json")[0] + "_" + attribute + ".stat"
+                    img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
+                    if (generate_stats and (not Path(stat_filename).exists() or getmtime(stat_filename) < data_modified_time)) or print_stat:
+                        total_hectares = len(hectares)
+                        total_inhabitant = sum(v["population"] for v in hectares)
 
-                    # get all base stats
-                    max_decrease, max_increase, median, avg, winning_nb, losing_nb, percentiles, lines = compute_stats(
-                                                        hectares, attribute, wanted_percentiles, "", lambda x: 1)
+                        # get all base stats
+                        max_decrease, max_increase, median, avg, winning_nb, losing_nb, percentiles, lines = compute_stats(
+                                                            hectares, attribute, wanted_percentiles, "", lambda x: 1)
 
-                    # Now computing the same values but weighted by concerned population
-                    pop_max_decrease, pop_max_increase, pop_median, pop_avg, pop_winning_nb, pop_losing_nb, pop_percentiles, pop_lines = compute_stats(
-                        hectares, attribute, wanted_percentiles, "", lambda x: x["population"])
+                        # Now computing the same values but weighted by concerned population
+                        pop_max_decrease, pop_max_increase, pop_median, pop_avg, pop_winning_nb, pop_losing_nb, pop_percentiles, pop_lines = compute_stats(
+                            hectares, attribute, wanted_percentiles, "", lambda x: x["population"])
 
-                    # Now computing the same values but in percentage
-                    per_max_decrease, per_max_increase, per_median, per_avg, per_winning_nb, per_losing_nb, per_percentiles, per_lines = compute_stats(
-                        hectares, attribute, wanted_percentiles, "", lambda x: 1.0/x["area"][1][base_ix])
+                        # Now computing the same values but in percentage
+                        per_max_decrease, per_max_increase, per_median, per_avg, per_winning_nb, per_losing_nb, per_percentiles, per_lines = compute_stats(
+                            hectares, attribute, wanted_percentiles, "", lambda x: 1.0/x["area"][1][1][0][base_ix])
 
-                    # Now computing the same values but weighted by concerned population
-                    perpop_max_decrease, perpop_max_increase, perpop_median, perpop_avg, perpop_winning_nb, perpop_losing_nb, perpop_percentiles, perpop_lines = compute_stats(
-                        hectares, attribute, wanted_percentiles, "", lambda x: x["population"]/total_inhabitant)
+                        # Now computing the same values but weighted by concerned population
+                        perpop_max_decrease, perpop_max_increase, perpop_median, perpop_avg, perpop_winning_nb, perpop_losing_nb, perpop_percentiles, perpop_lines = compute_stats(
+                            hectares, attribute, wanted_percentiles, "", lambda x: x["population"]/total_inhabitant)
 
-                    if print_stat:
-                        print(lines)
+                        if print_stat:
+                            print(lines)
 
-                    summary[hectare_file][i][base] = FileStats(max_decrease=max_decrease,
-                                                               max_increase=max_increase,
-                                                               median=median,
-                                                               average=avg,
-                                                               winning_nb=winning_nb,
-                                                               losing_nb=losing_nb,
-                                                               percentiles=percentiles,
-                                                               pop_max_decrease=pop_max_decrease,
-                                                               pop_max_increase=pop_max_increase,
-                                                               pop_median=pop_median,
-                                                               pop_average=pop_avg,
-                                                               pop_winning_nb=pop_winning_nb,
-                                                               pop_losing_nb=pop_losing_nb,
-                                                               pop_percentiles=pop_percentiles,
-                                                               percentage_max_decrease=per_max_decrease,
-                                                               percentage_max_increase=per_max_increase,
-                                                               percentage_median=per_median,
-                                                               percentage_average=per_avg,
-                                                               percentage_winning_nb=per_winning_nb,
-                                                               percentage_losing_nb=per_losing_nb,
-                                                               percentage_percentiles=per_percentiles,
-                                                               percentage_pop_max_decrease=perpop_max_decrease,
-                                                               percentage_pop_max_increase=perpop_max_increase,
-                                                               percentage_pop_median=perpop_median,
-                                                               percentage_pop_average=perpop_avg,
-                                                               percentage_pop_winning_nb=perpop_winning_nb,
-                                                               percentage_pop_losing_nb=perpop_losing_nb,
-                                                               percentage_pop_percentiles=perpop_percentiles,
-                                                               glob_inhabitant_nb=total_inhabitant,
-                                                               glob_hectares_nb=total_hectares,
-                                                               )
+                        summary[hectare_file][i][base] = FileStats(max_decrease=max_decrease,
+                                                                   max_increase=max_increase,
+                                                                   median=median,
+                                                                   average=avg,
+                                                                   winning_nb=winning_nb,
+                                                                   losing_nb=losing_nb,
+                                                                   percentiles=percentiles,
+                                                                   pop_max_decrease=pop_max_decrease,
+                                                                   pop_max_increase=pop_max_increase,
+                                                                   pop_median=pop_median,
+                                                                   pop_average=pop_avg,
+                                                                   pop_winning_nb=pop_winning_nb,
+                                                                   pop_losing_nb=pop_losing_nb,
+                                                                   pop_percentiles=pop_percentiles,
+                                                                   percentage_max_decrease=per_max_decrease,
+                                                                   percentage_max_increase=per_max_increase,
+                                                                   percentage_median=per_median,
+                                                                   percentage_average=per_avg,
+                                                                   percentage_winning_nb=per_winning_nb,
+                                                                   percentage_losing_nb=per_losing_nb,
+                                                                   percentage_percentiles=per_percentiles,
+                                                                   percentage_pop_max_decrease=perpop_max_decrease,
+                                                                   percentage_pop_max_increase=perpop_max_increase,
+                                                                   percentage_pop_median=perpop_median,
+                                                                   percentage_pop_average=perpop_avg,
+                                                                   percentage_pop_winning_nb=perpop_winning_nb,
+                                                                   percentage_pop_losing_nb=perpop_losing_nb,
+                                                                   percentage_pop_percentiles=perpop_percentiles,
+                                                                   glob_inhabitant_nb=total_inhabitant,
+                                                                   glob_hectares_nb=total_hectares,
+                                                                   )
 
-                    if generate_stats and getmtime(stat_filename) < data_modified_time:
-                        with open(
-                                hectare_file.split(".json")[0] + "_" + attribute + "_" + str(i) + "_" + base + ".stat",
-                                "w") as f:
-                            f.write(lines)
+                        if generate_stats and (not Path(stat_filename).exists() or getmtime(stat_filename) < data_modified_time):
+                            with open(
+                                    stat_filename,
+                                    "w") as f:
+                                f.write(lines)
 
-                if generate_img:
-                    if getmtime(img_filename) < data_modified_time:
-                        generate_img_from_hectare(hectares, region_map, attribute,
-                                                  img_filename)
-                    if generate_img > 1:
-                        if i == 0:
-                            attribute = "area_" + str(i) + "_" + base
+                    if generate_img:
+                        if not Path(img_filename).exists() or getmtime(img_filename) < data_modified_time:
+                            generate_img_from_hectare(hectares, region_map, attribute,
+                                                      img_filename)
+                        if generate_img > 1:
+                            # attribute = "area_" + str(i + 1) + "_" + base
                             add_img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
-                            if getmtime(add_img_filename) < data_modified_time:
+                            if not Path(add_img_filename).exists() or getmtime(add_img_filename) < data_modified_time:
                                 generate_img_from_hectare(hectares, region_map, attribute, add_img_filename)
-                        attribute = "area_" + str(i + 1) + "_" + base
-                        add_img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
-                        if getmtime(add_img_filename) < data_modified_time:
-                            generate_img_from_hectare(hectares, region_map, attribute, add_img_filename)
 
     if compute_summary:
         write_summary(summary, hectare_files, generate_stats, print_stat)
