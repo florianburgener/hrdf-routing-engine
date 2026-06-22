@@ -20,11 +20,11 @@ pub fn create_grid(
     let dist_x = bounding_box.1.0 - bounding_box.0.0;
     let dist_y = bounding_box.1.1 - bounding_box.0.1;
     let max = dist_x.max(dist_y);
-    println!("dist_x = {dist_x}, dist_y = {dist_y}, max = {max}, dx = {dx}");
+    // println!("dist_x = {dist_x}, dist_y = {dist_y}, max = {max}, dx = {dx}");
 
     let num_points_x = ((bounding_box.1.0 - bounding_box.0.0) / dx).ceil() as usize;
     let num_points_y = ((bounding_box.1.1 - bounding_box.0.1) / dx).ceil() as usize;
-    println!("num_points_x = {num_points_x}, num_points_y = {num_points_y}");
+    // println!("num_points_x = {num_points_x}, num_points_y = {num_points_y}");
 
     let tree = KdTree::build_by_ordered_float(
         data.iter()
