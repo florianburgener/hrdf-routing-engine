@@ -1,0 +1,706 @@
+[
+    {
+        "filter_name": "Sans 1",
+        "filter": {
+            "Line": [
+                "1"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 5",
+        "filter": {
+            "Line": [
+                "5"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 8",
+        "filter": {
+            "Line": [
+                "8"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 9",
+        "filter": {
+            "Line": [
+                "9"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 11",
+        "filter": {
+            "Line": [
+                "11"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 20",
+        "filter": {
+            "Line": [
+                "20"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 21",
+        "filter": {
+            "Line": [
+                "21"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 22",
+        "filter": {
+            "Line": [
+                "22"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 23",
+        "filter": {
+            "Line": [
+                "23"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 25",
+        "filter": {
+            "Line": [
+                "25"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 28",
+        "filter": {
+            "Line": [
+                "28"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 31",
+        "filter": {
+            "Line": [
+                "31"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 32",
+        "filter": {
+            "Line": [
+                "32"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 33",
+        "filter": {
+            "Line": [
+                "33"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 34",
+        "filter": {
+            "Line": [
+                "34"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 37",
+        "filter": {
+            "Line": [
+                "37"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 38",
+        "filter": {
+            "Line": [
+                "38"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 39",
+        "filter": {
+            "Line": [
+                "39"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 40",
+        "filter": {
+            "Line": [
+                "40"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 41",
+        "filter": {
+            "Line": [
+                "41"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 42",
+        "filter": {
+            "Line": [
+                "42"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 43",
+        "filter": {
+            "Line": [
+                "43"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 44",
+        "filter": {
+            "Line": [
+                "44"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 45",
+        "filter": {
+            "Line": [
+                "45"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 46",
+        "filter": {
+            "Line": [
+                "46"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 47",
+        "filter": {
+            "Line": [
+                "47"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 48",
+        "filter": {
+            "Line": [
+                "48"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 50",
+        "filter": {
+            "Line": [
+                "50"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 51",
+        "filter": {
+            "Line": [
+                "51"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 52",
+        "filter": {
+            "Line": [
+                "52"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 53",
+        "filter": {
+            "Line": [
+                "53"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 54",
+        "filter": {
+            "Line": [
+                "54"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 55",
+        "filter": {
+            "Line": [
+                "55"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 57",
+        "filter": {
+            "Line": [
+                "57"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 58",
+        "filter": {
+            "Line": [
+                "58"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 59",
+        "filter": {
+            "Line": [
+                "59"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 60",
+        "filter": {
+            "Line": [
+                "60"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 61",
+        "filter": {
+            "Line": [
+                "61"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 64",
+        "filter": {
+            "Line": [
+                "64"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 66",
+        "filter": {
+            "Line": [
+                "66"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 67",
+        "filter": {
+            "Line": [
+                "67"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 68",
+        "filter": {
+            "Line": [
+                "68"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 69",
+        "filter": {
+            "Line": [
+                "69"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 70",
+        "filter": {
+            "Line": [
+                "70"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 70N",
+        "filter": {
+            "Line": [
+                "70N"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 71",
+        "filter": {
+            "Line": [
+                "71"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 72",
+        "filter": {
+            "Line": [
+                "72"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 73",
+        "filter": {
+            "Line": [
+                "73"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 74",
+        "filter": {
+            "Line": [
+                "74"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 75",
+        "filter": {
+            "Line": [
+                "75"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 78",
+        "filter": {
+            "Line": [
+                "78"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 80",
+        "filter": {
+            "Line": [
+                "80"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 82",
+        "filter": {
+            "Line": [
+                "82"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 83",
+        "filter": {
+            "Line": [
+                "83"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 83N",
+        "filter": {
+            "Line": [
+                "83N"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 91",
+        "filter": {
+            "Line": [
+                "91"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 92",
+        "filter": {
+            "Line": [
+                "92"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans A",
+        "filter": {
+            "Line": [
+                "A"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans E",
+        "filter": {
+            "Line": [
+                "E"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans G",
+        "filter": {
+            "Line": [
+                "G"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans L",
+        "filter": {
+            "Line": [
+                "L"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 2",
+        "filter": {
+            "Line": [
+                "2"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 3",
+        "filter": {
+            "Line": [
+                "3"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 6",
+        "filter": {
+            "Line": [
+                "6"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 7",
+        "filter": {
+            "Line": [
+                "7"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 10",
+        "filter": {
+            "Line": [
+                "10"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 19",
+        "filter": {
+            "Line": [
+                "19"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 12",
+        "filter": {
+            "Line": [
+                "12"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 14",
+        "filter": {
+            "Line": [
+                "14"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 15",
+        "filter": {
+            "Line": [
+                "15"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 17",
+        "filter": {
+            "Line": [
+                "17"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 18",
+        "filter": {
+            "Line": [
+                "18"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans E+",
+        "filter": {
+            "Line": [
+                "E+"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans G+",
+        "filter": {
+            "Line": [
+                "G+"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 29",
+        "filter": {
+            "Line": [
+                "29"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C1",
+        "filter": {
+            "Line": [
+                "C1"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C3",
+        "filter": {
+            "Line": [
+                "C3"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C4",
+        "filter": {
+            "Line": [
+                "C4"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C5",
+        "filter": {
+            "Line": [
+                "C5"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C6",
+        "filter": {
+            "Line": [
+                "C6"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C7",
+        "filter": {
+            "Line": [
+                "C7"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C8",
+        "filter": {
+            "Line": [
+                "C8"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans C9",
+        "filter": {
+            "Line": [
+                "C9"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 271",
+        "filter": {
+            "Line": [
+                "271"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 272",
+        "filter": {
+            "Line": [
+                "272"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans 274",
+        "filter": {
+            "Line": [
+                "274"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans M",
+        "filter": {
+            "Line": [
+                "M"
+            ]
+        }
+    },
+    {
+        "filter_name": "Sans N",
+        "filter": {
+            "Line": [
+                "N"
+            ]
+        }
+    }
+]
