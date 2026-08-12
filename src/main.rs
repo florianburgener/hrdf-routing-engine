@@ -226,6 +226,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
                         .await?;
                 req_hrdf.push(hrdf_2026);
             }
+            let now = Instant::now();
             let surfaces = run_surface_per_ha(
                 req_hrdf,
                 excluded_polygons,
