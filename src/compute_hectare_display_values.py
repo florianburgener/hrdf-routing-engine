@@ -1,12 +1,15 @@
 import json
 
-def load_and_update_hectare(hectare_file: str) -> tuple[list, int]:
+def load_and_update_hectare(hectare_file: str, base_dict: dict|bool) -> tuple[list, int]:
+    file_time = hectare_file.split(".filter_")[1].split("_PT")[0]
+    standalone_file = isinstance(base_dict, bool)
+
     with open(hectare_file) as file:
         hectares = json.load(file)
 
     highest_cmp = 0
     filter_base_name = "base"
-    for h in hectares:
+    for hectare_index, h in enumerate(hectares):
         filters = {}
         # analyze at first each filter individually in case of multiple times
         for key, value in h["area"]:
@@ -32,10 +35,15 @@ def load_and_update_hectare(hectare_file: str) -> tuple[list, int]:
                 filters[key].append(a)
         # Then compare filters to each other
         for key, value in filters.items():
-            if key == filter_base_name:
-                continue
+            if standalone_file:
+                if key == filter_base_name:
+                    continue
+                else:
+                    for i, (filtered, base) in enumerate(zip(value, filters[filter_base_name])):
+                        for (filtered_val, base_val, metric) in zip(filtered, base, ["max", "mid", "min"]):
+                            h[filter_base_name + "-" + key + "_diff_" + metric + "_" + str(i)] = base_val - filtered_val
             else:
-                for i, (filtered, base) in enumerate(zip(value, filters[filter_base_name])):
+                for i, (filtered, base) in enumerate(zip(value, base_dict[0][hectare_index]['area'][0][1])):
                     for (filtered_val, base_val, metric) in zip(filtered, base, ["max", "mid", "min"]):
                         h[filter_base_name + "-" + key + "_diff_" + metric + "_" + str(i)] = base_val - filtered_val
 
