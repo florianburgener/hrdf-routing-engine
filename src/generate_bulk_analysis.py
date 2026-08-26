@@ -10,6 +10,8 @@ from pathlib import Path
 from choropleth_generator import generate_img_from_hectare
 from compute_hectare_display_values import load_and_update_hectare
 
+import matplotlib.pyplot as plt
+
 
 @dataclass
 class MeasureStat:
@@ -70,6 +72,7 @@ class FileStats:
     glob_inhabitant_nb: int
     glob_hectares_nb: int
 
+
     def get_measure_dict(self):
         content_dict = {"base metrics": self.base_metrics, "filtered base metrics": self.filtered_base_metrics,
                         "population weighted metrics": self.pop_metrics, "filtered population weighted metrics": self.filtered_pop_metrics,
@@ -89,6 +92,7 @@ def convert(date_time):
     format = '%b %d %Y %I:%M%p'
     datetime_str = datetime.datetime.strptime(date_time, format)
 
+
 def format_percentage(fs_obj, measure, att):
     att_unit = "%" if "pop" not in att else ""
     if "glob" not in att:
@@ -96,12 +100,14 @@ def format_percentage(fs_obj, measure, att):
     else:
         return ""
 
+
 def format_percentage_list(fs_obj, i, measure, att):
     att_unit = "%" if "pop" not in att else ""
     if "glob" not in att:
         return " (" + str(round(fs_obj[0][base].__getattribute__(measure).__getattribute__(att)[i] * 100, 2)) + f"{att_unit})"
     else:
         return ""
+
 
 def create_display_dict(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_files: list[str]):
     days_from = [datetime.datetime.fromisoformat(fn.split("_")[-2]) for fn in out_files]
@@ -121,6 +127,25 @@ def create_display_dict(files_stats: dict[str, dict[int, dict[str, FileStats]]],
                     resulting_dict[base][date][filter] = values_dict[base_ix][base]
     return resulting_dict
 
+
+def display_hist(values: list[int | float], keys: list[str | int | float], metric_name: str, save_img: str | None, save_only: bool):
+    fig = plt.figure(layout="constrained", figsize=(40, 24))
+    layout = "a"
+    axs = fig.subplot_mosaic(layout)
+
+    x = 'a'
+    axs[x].set_xlabel('Filter', fontsize=45)
+    y_axis_label = f"{metric_name}"
+    axs[x].set_ylabel(y_axis_label, fontsize=45)
+
+    axs[x].hist(keys, values, label = f"{metric_name}")
+
+    if not save_only:
+        plt.show()
+    if save_img is not None:
+        plt.savefig(f'img/{save_img}.png', dpi=150)
+
+
 def generate_header(first_datetime, last_datetime):
 
     first_time = first_datetime.time()
@@ -130,11 +155,18 @@ def generate_header(first_datetime, last_datetime):
     format_with_weekday = "%A %Y-%m-%d"
     lines = [
         f"Summary of analysis from the {first_day.strftime(format_with_weekday)} at {first_time} to the {last_day.strftime(format_with_weekday)} at {last_time}"]
-    lines += ['Résultat des comparaisons sur une semaine, entre les horaires 2024 et 2025.',
+    lines += ['Résultat des comparaisons entre les filtres annoncés.',
               "Nous comparons les surfaces de l'isochrone minimal, le médian et le maximal.",
-              "Pour chacune de ces comparaisons, nous affichons pour chaque jour les valeurs calculées.",
+              "Pour chacune de ces mesures, nous comparons à différentes dates et heures.",
+              "Pour chacune de ces datres, nous comparons plusieurs métriques :",
+              " - La différence de surface disponible depuis chaque hectare en m²",
+              " - La différence de surface disponible depuis chaque hectare en % perdu ou gagné.",
+              " - Ces deux métriques pondérées par la population de chacun des hectares.",
+              " - Ces quatre métriques avec un filtre ignorant les hectares qui ont changé de moins d'1 m²",
+              "Pour chacune de ces comparaisons, nous affichons pour chaque filtre les valeurs calculées.",
               "",
               "Description des valeurs :",
+              "nb hectares : Le nombre d'hectares qui sont considérés pour cette ligne (ce sera le nombre total pour les cas non filtrés)",
               "Max_decrease : la surface perdue de l'hectare ayant le plus perdu de surface",
               "max_increase : la surface gagnée de l'hectare ayant le plus gagné en surface",
               "median : la médiane de différence de surface",
@@ -149,6 +181,7 @@ def generate_header(first_datetime, last_datetime):
               ]
     lines += [""]
     return lines
+
 
 def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_files: list[str], write_on_disk: bool,
                   print_result: bool, print_by_filter: bool = True):
