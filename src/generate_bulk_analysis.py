@@ -128,7 +128,7 @@ def create_display_dict(files_stats: dict[str, dict[int, dict[str, FileStats]]],
     return resulting_dict
 
 
-def display_hist(values: list[int | float], keys: list[str | int | float], metric_name: str, save_img: str | None, save_only: bool):
+def display_hist(values: list[int | float], keys: list[str], metric_name: str, save_img: str | None, save_only: bool):
     fig = plt.figure(layout="constrained", figsize=(40, 24))
     layout = "a"
     axs = fig.subplot_mosaic(layout)
@@ -138,12 +138,15 @@ def display_hist(values: list[int | float], keys: list[str | int | float], metri
     y_axis_label = f"{metric_name}"
     axs[x].set_ylabel(y_axis_label, fontsize=45)
 
-    axs[x].hist(keys, values, label = f"{metric_name}")
+    plot = axs[x].bar(keys, values)
+    axs[x].bar_label(plot, rotation=0, padding=0)
+    plt.xticks(rotation=45, ha='right')
 
     if not save_only:
         plt.show()
     if save_img is not None:
-        plt.savefig(f'img/{save_img}.png', dpi=150)
+        plt.savefig(f'img/{save_img}.svg', dpi=150)
+    plt.close()
 
 
 def generate_header(first_datetime, last_datetime):
@@ -188,6 +191,7 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
     lines: list[str] = []
     column_width = 30
     first_column_width = 20
+    wanted_hist = ["hectare_nb", "max_increase", "median"]
     display_dict: dict[str, dict[str, dict[str, FileStats]]] = create_display_dict(files_stats, out_files)
 
     days_to = [datetime.datetime.fromisoformat(fn.split("__")[1].split("_")[0]) for fn in out_files]
@@ -204,7 +208,7 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
                     local_measures, local_glob = v.get_measure_dict()
                     measure = local_measures[measure_name]
                     if first:
-                        lines += [f"{measure_name}:"]
+                        lines += [f"{measure_name.split("/")[-1].split(".")[0]}:"]
                         lines += [" " * first_column_width + "|" + "|".join(measure.extract_header_list(column_width))]
                         first = False
                     lines += ["|".join([filter.center(first_column_width)] + [str(e).center(column_width) for e in measure.extract_as_list(column_width)])]
@@ -216,6 +220,10 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
                 lines += ["=" * len(lines[-1])]
                 lines += [""]
                 first = True
+                for hist_attr in wanted_hist:
+                    values_to_display = [e.get_measure_dict()[0][measure_name].__getattribute__(hist_attr) for e in val.values()]
+                    keys = [key.split("/")[-1].split(".filter")[0] for key in val.keys()]
+                    display_hist(values_to_display, keys, hist_attr, f"hist_{hist_attr}_{measure_name}_{base}_{date}", True)
 
     if print_result:
         print("\n".join(lines))
@@ -371,7 +379,7 @@ if __name__ == "__main__":
         hectare_file = sys.argv[1]
         hectare_files.append(hectare_file)
     else:
-        hectare_files = glob.glob("hectare_*.json")
+        hectare_files = glob.glob("hectare_resources/hectare_*.json")
 
     geojson_filename = "geo_ressources/geo_grid_swiss_wgs84_combined_filtered"
     with open(geojson_filename + '.geojson') as geo_file:
@@ -460,4 +468,5 @@ if __name__ == "__main__":
                                 generate_img_from_hectare(hectares, region_map, attribute, add_img_filename)
 
     if compute_summary:
+        print("Start writing summary")
         write_summary(summary, hectare_files, generate_stats, print_stat)
