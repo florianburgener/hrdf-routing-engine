@@ -26,6 +26,7 @@ class MeasureStat:
     winning_nb: float
     losing_nb: float
     percentiles: list
+    total_surface: int
     hectare_nb: int = -1
 
     def __str__(self, column_width=-1) -> str:
@@ -56,6 +57,14 @@ class MeasureStat:
             "losing_nb".center(column_width),
             "percentiles".center(column_width),
         ]
+
+    @property
+    def per10(self):
+        return self.percentiles[-len(self.percentiles)//10]
+
+    @property
+    def per25(self):
+        return self.percentiles[-len(self.percentiles)//4]
 
 @dataclass
 class FileStats:
@@ -195,7 +204,7 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
     lines: list[str] = []
     column_width = 30
     first_column_width = 20
-    wanted_hist = ["hectare_nb", "max_increase", "median"]
+    wanted_hist = ["hectare_nb", "max_increase", "median", "total_surface", "per10", "per25"]
     display_dict: dict[str, dict[str, dict[str, FileStats]]] = create_display_dict(files_stats, out_files)
 
     days_to = [datetime.datetime.fromisoformat(fn.split("__")[1].split("_")[0]) for fn in out_files]
@@ -322,6 +331,7 @@ def compute_stats(hectares: list[dict], attribute, wanted_percentiles, lines, fa
     avg = sum(v[attribute] * factor(v) for v in hectares) / total_hectares
     winning_nb = sum(factor(v) for v in hectares if v[attribute] > 0)
     losing_nb = sum(factor(v) for v in hectares if v[attribute] < 0)
+    total_surface = sum(factor(v) for v in hectares)
     percentiles = []
     lines += f"Highest loss : {max_decrease}\n"
     lines += f"Highest increase : {max_increase}\n"
@@ -337,7 +347,7 @@ def compute_stats(hectares: list[dict], attribute, wanted_percentiles, lines, fa
         percentiles.append(percentile)
         p_line = f"{p * 100 / wanted_percentiles}% | {percentile} m²\n"
         lines += p_line
-    total_stats = MeasureStat(max_decrease, max_increase, median, avg, winning_nb, losing_nb, percentiles, total_hectares)
+    total_stats = MeasureStat(max_decrease, max_increase, median, avg, winning_nb, losing_nb, percentiles, total_surface, total_hectares)
     # todo: evaluate and compute distance of the modification metric
     
     # add stats for only modified hectares
@@ -351,6 +361,7 @@ def compute_stats(hectares: list[dict], attribute, wanted_percentiles, lines, fa
         avg = sum(v[attribute] * factor(v) for v in tmp_hectares) / hectares_nb
         winning_nb = sum(factor(v) for v in tmp_hectares if v[attribute] > 0)
         losing_nb = sum(factor(v) for v in tmp_hectares if v[attribute] < 0)
+        total_surface = sum(factor(v) for v in hectares)
         percentiles = []
         lines += f"#############################################\n"
         lines += f"Statistics only for hectares vaing a modification of at least {validity_threshold}\n"
@@ -368,14 +379,14 @@ def compute_stats(hectares: list[dict], attribute, wanted_percentiles, lines, fa
             percentiles.append(percentile)
             p_line = f"{p * 100 / wanted_percentiles}% | {percentile} m²\n"
             lines += p_line
-    filter_stats = MeasureStat(max_decrease, max_increase, median, avg, winning_nb, losing_nb, percentiles, hectares_nb)
+    filter_stats = MeasureStat(max_decrease, max_increase, median, avg, winning_nb, losing_nb, percentiles, total_surface, hectares_nb)
     return total_stats, filter_stats, lines
 
 
 if __name__ == "__main__":
     generate_img = 0
-    generate_stats = True
-    print_stat = True
+    generate_stats = False
+    print_stat = False
     compute_summary = True
     wanted_percentiles = 20
     hectare_files = []
@@ -422,7 +433,7 @@ if __name__ == "__main__":
                 for base_ix, base in enumerate(["max", "mid", "min"]):
                     # attribute = attribute.split("_")[0] + "_diff_" + base + "_" + str(i)
                     stat_filename = hectare_file.split(".json")[0] + "_" + attribute + ".stat"
-                    img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
+                    img_filename = "tmp/"+hectare_file.split("/")[-1].split(".json")[0] + "_" + attribute + '.svg'
                     if (generate_stats and (not Path(stat_filename).exists() or getmtime(stat_filename) < data_modified_time)) or print_stat or compute_summary:
                         total_hectares = len(hectares)
                         total_inhabitant = sum(v["population"] for v in hectares)
@@ -479,7 +490,7 @@ if __name__ == "__main__":
                                                       img_filename)
                         if generate_img > 1:
                             # attribute = "area_" + str(i + 1) + "_" + base
-                            add_img_filename = hectare_file.split(".json")[0] + "_" + attribute + '.svg'
+                            add_img_filename = "tmp/"+hectare_file.split("/")[-1].split(".json")[0] + "_" + attribute + '.svg'
                             if not Path(add_img_filename).exists() or getmtime(add_img_filename) < data_modified_time:
                                 generate_img_from_hectare(hectares, region_map, attribute, add_img_filename)
 
