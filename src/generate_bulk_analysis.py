@@ -1,4 +1,6 @@
 import json
+import geopandas as gpd
+import folium
 import glob
 import sys
 from dataclasses import dataclass
@@ -6,6 +8,8 @@ from os.path import getmtime
 from typing import Any
 
 from pathlib import Path
+
+from pandas.core.interchange import column
 
 from choropleth_generator import generate_img_from_hectare
 from compute_hectare_display_values import load_and_update_hectare
@@ -385,6 +389,9 @@ if __name__ == "__main__":
     with open(geojson_filename + '.geojson') as geo_file:
         # with open('geo_ressources/geo_romandie_wgs84_PROD_v1.json') as geo_file:
         region_map = json.load(geo_file)
+        geodata = gpd.read_file(geojson_filename + '.geojson')
+        geodata.plot()
+        plt.show()
 
     base_files = [fil for fil in hectare_files if "base" in fil]
     base_hectares = {}
@@ -458,6 +465,15 @@ if __name__ == "__main__":
                                 f.write(lines)
 
                     if generate_img:
+                        m = geodata.explore(
+                            column="reli",
+                            scheme="naturalbreaks",  # use mapclassify's natural breaks scheme
+                            legend=True,  # show legend
+                        )
+                        folium.TileLayer("CartoDB positron", show=False).add_to(
+                            m
+                        )
+                        m
                         if not Path(img_filename).exists() or getmtime(img_filename) < data_modified_time:
                             generate_img_from_hectare(hectares, region_map, attribute,
                                                       img_filename)

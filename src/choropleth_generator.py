@@ -13,8 +13,20 @@ def generate_img_from_hectare(data_to_display: list[dict[str,float]], region_to_
                         color_continuous_scale='RdYlGn',
                         projection="mercator")
     # fig.update_geos(fitbounds="locations", visible=False)
-    fig.update_geos(fitbounds="locations")
+    fig.update_geos(
+        showcoastlines=True, coastlinecolor="RebeccaPurple",
+        showland=True, landcolor="LightGreen",
+        showocean=True, oceancolor="LightBlue",
+        # showlakes=True, lakecolor="Blue",
+        showrivers=True, rivercolor="Blue",
+        showcountries=True, countrycolor="RebeccaPurple",
+        showsubunits=True, subunitcolor="Black",
+        resolution=50,
+        fitbounds="locations",# visible=False
+    )
+    # fig.update_geos(fitbounds="locations")
     fig.write_image(file=output_filename, scale=100, width=8000, height=8000)
+    fig = px.line_geo(lat=[0,15,20,35], lon=[5,10,25,30])
 
 if __name__ == "__main__":
     hectare_filename = "hectare_all_2026-04-17 07:30:00_2025-04-18 07:30:00_PT1800S"

@@ -1,4 +1,5 @@
 import json
+import pandas as pd
 
 def load_and_update_hectare(hectare_file: str, base_dict: dict|bool) -> tuple[list, int]:
     file_time = hectare_file.split(".filter_")[1].split("_PT")[0]
@@ -6,6 +7,7 @@ def load_and_update_hectare(hectare_file: str, base_dict: dict|bool) -> tuple[li
 
     with open(hectare_file) as file:
         hectares = json.load(file)
+        pd_hectares = pd.read_json(hectare_file)
 
     highest_cmp = 0
     filter_base_name = "base"
