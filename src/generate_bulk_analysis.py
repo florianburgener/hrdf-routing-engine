@@ -1,4 +1,6 @@
 import json
+import os
+
 import geopandas as gpd
 import folium
 import glob
@@ -9,6 +11,7 @@ from typing import Any
 
 from pathlib import Path
 
+import numpy as np
 from pandas.core.interchange import column
 
 from choropleth_generator import generate_img_from_hectare
@@ -158,7 +161,44 @@ def display_hist(values: list[int | float], keys: list[str], metric_name: str, s
     if not save_only:
         plt.show()
     if save_img is not None:
-        plt.savefig(f'img/{save_img}.svg', dpi=150)
+        plt.savefig(f'{save_img}.svg', dpi=150)
+    plt.close()
+
+
+def display_detailed_hist(values: dict[str,list[int | float]], ylabel_name: str, metric_names: list[str], save_img: str | None, save_only: bool, normalize: bool):
+    fig = plt.figure(layout="constrained", figsize=(40, 24))
+    layout = "a;b;c;d;e;f"
+    axs = fig.subplot_mosaic(layout)
+
+    bar_width = 0.05
+    colors = ['xkcd:mauve', 'xkcd:teal', 'xkcd:purple', 'xkcd:forest green', 'xkcd:sky blue', 'xkcd:salmon',
+              'xkcd:dark red', 'xkcd:seafoam', 'xkcd:dark orange', 'xkcd:grey blue', 'xkcd:goldenrod', 'xkcd:rust',
+              'xkcd:fuchsia', 'xkcd:pale purple', 'xkcd:crimson', 'xkcd:sage', 'xkcd:coral', 'xkcd:grape', 'xkcd:grass']
+    x = 'a'
+    # axs[x].set_xlabel('Filter', fontsize=45)
+    y_axis_label = f"{ylabel_name}"
+    axs[x].set_ylabel(y_axis_label, fontsize=45)
+    max_val = [min([v[i] for v in values.values()]) for i in range(len(metric_names))]
+    min_val = [max([v[i] for v in values.values()]) for i in range(len(metric_names))]
+
+    br: list = [np.arange(len(metric_names))]
+    for i in range(len(values.keys()) - 1):
+        br.append([p + bar_width for p in br[-1]])
+    for (i, c), (k, v) in zip(enumerate(colors),values.items()):
+        if normalize:
+            displayed_values = [(val - min_val[i])/(max_val[i] - min_val[i]) if (max_val[i] - min_val[i]) != 0 else 0 for i, val in enumerate(v)]
+        else:
+            displayed_values = v
+        label_values = [int(val * 100)/100 for val in v]
+        plot = axs[x].bar(br[i], displayed_values, color=c, width=bar_width, label=k.split("/")[-1].split(".")[0].split("_")[-1].split('l')[-1])
+        axs[x].bar_label(plot, labels=label_values, rotation=90)
+    plt.xticks([r + bar_width for r in range(len(metric_names))], metric_names)
+    plt.legend()
+
+    if not save_only:
+        plt.show()
+    if save_img is not None:
+        plt.savefig(f'{save_img}.svg', dpi=150)
     plt.close()
 
 
@@ -213,6 +253,7 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
     lines += generate_header(first_datetime, last_datetime)
     first = True
     measures = list(list(list(display_dict.values())[0].values())[0].values())[0].get_measure_dict()[0].keys()
+    interesting_ones = []
 
     for base, d in display_dict.items():
         for date, val in d.items():
@@ -235,9 +276,26 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
                 first = True
                 for hist_attr in wanted_hist:
                     values_to_display = [e.get_measure_dict()[0][measure_name].__getattribute__(hist_attr) for e in val.values()]
+                    interesting_ones += sorted(list(val.items()), key=lambda tu: tu[1].get_measure_dict()[0][measure_name].__getattribute__(hist_attr))[:5]
                     keys = [key.split("/")[-1].split(".filter")[0] for key in val.keys()]
-                    display_hist(values_to_display, keys, hist_attr, f"hist_{hist_attr}_{measure_name}_{base}_{date}", True)
+                    folder_name = f"img/{measure_name}_{base}"
+                    if not Path(folder_name).exists():
+                        os.makedirs(folder_name)
+                    fn = f"{folder_name}/hist_{hist_attr}_{date}"
+                    if not Path(fn).exists():
+                        display_hist(values_to_display, keys, hist_attr, fn, True)
 
+                interesting_ones = {key: [val.get_measure_dict()[0][measure_name].__getattribute__(hist_attr) for hist_attr in wanted_hist]
+                                        for (key, val) in interesting_ones}
+                interesting_ones_invert = {hist: [v[i] for k, v in interesting_ones.items()] for i, hist in enumerate(wanted_hist)}
+                folder_name = f"img/{measure_name}_{base}"
+                fn = f"{folder_name}/detailed_hist_{date}"
+                if not Path(fn).exists() or True:
+                    display_detailed_hist(interesting_ones, "Proportional difference", wanted_hist, fn, True, True)
+                fn = f"{folder_name}/detailed_hist_inv_{date}"
+                if not Path(fn).exists() or True:
+                    display_detailed_hist(interesting_ones_invert, "surface modified", list(interesting_ones.keys()), fn, True, True)
+                interesting_ones = []
     if print_result:
         print("\n".join(lines))
     if write_on_disk:
@@ -331,7 +389,7 @@ def compute_stats(hectares: list[dict], attribute, wanted_percentiles, lines, fa
     avg = sum(v[attribute] * factor(v) for v in hectares) / total_hectares
     winning_nb = sum(factor(v) for v in hectares if v[attribute] > 0)
     losing_nb = sum(factor(v) for v in hectares if v[attribute] < 0)
-    total_surface = sum(factor(v) for v in hectares)
+    total_surface = sum(factor(v) * v[attribute] for v in hectares)
     percentiles = []
     lines += f"Highest loss : {max_decrease}\n"
     lines += f"Highest increase : {max_increase}\n"
@@ -361,10 +419,11 @@ def compute_stats(hectares: list[dict], attribute, wanted_percentiles, lines, fa
         avg = sum(v[attribute] * factor(v) for v in tmp_hectares) / hectares_nb
         winning_nb = sum(factor(v) for v in tmp_hectares if v[attribute] > 0)
         losing_nb = sum(factor(v) for v in tmp_hectares if v[attribute] < 0)
-        total_surface = sum(factor(v) for v in hectares)
+        total_surface = sum(factor(v) * v[attribute] for v in tmp_hectares)
         percentiles = []
         lines += f"#############################################\n"
-        lines += f"Statistics only for hectares vaing a modification of at least {validity_threshold}\n"
+        lines += f"Statistics only for hectares having a modification of at least {validity_threshold}\n"
+        lines += f"Number of impacted hectared : {hectares_nb}\n"
         lines += f"Highest loss : {max_decrease}\n"
         lines += f"Highest increase : {max_increase}\n"
         lines += f"Median : {median}\n"
@@ -402,7 +461,8 @@ if __name__ == "__main__":
         region_map = json.load(geo_file)
         geodata = gpd.read_file(geojson_filename + '.geojson')
         geodata.plot()
-        plt.show()
+        # plt.show()
+        plt.close()
 
     base_files = [fil for fil in hectare_files if "base" in fil]
     base_hectares = {}
