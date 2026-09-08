@@ -12,6 +12,7 @@ from typing import Any
 from pathlib import Path
 
 import numpy as np
+from kaleido._utils import fig_tools
 from pandas.core.interchange import column
 
 from choropleth_generator import generate_img_from_hectare
@@ -167,7 +168,7 @@ def display_hist(values: list[int | float], keys: list[str], metric_name: str, s
 
 def display_detailed_hist(values: dict[str,list[int | float]], ylabel_name: str, metric_names: list[str], save_img: str | None, save_only: bool, normalize: bool):
     fig = plt.figure(layout="constrained", figsize=(40, 24))
-    layout = "a;b;c;d;e;f"
+    layout = "a"
     axs = fig.subplot_mosaic(layout)
 
     bar_width = 0.05
@@ -194,6 +195,70 @@ def display_detailed_hist(values: dict[str,list[int | float]], ylabel_name: str,
         axs[x].bar_label(plot, labels=label_values, rotation=90)
     plt.xticks([r + bar_width for r in range(len(metric_names))], metric_names)
     plt.legend()
+
+    if not save_only:
+        plt.show()
+    if save_img is not None:
+        plt.savefig(f'{save_img}.svg', dpi=150)
+    plt.close()
+
+
+def get_line_color(filter):
+    colors = ['xkcd:mauve', 'xkcd:teal', 'xkcd:purple', 'xkcd:forest green', 'xkcd:sky blue', 'xkcd:salmon',
+              'xkcd:dark red', 'xkcd:seafoam', 'xkcd:dark orange', 'xkcd:grey blue', 'xkcd:goldenrod', 'xkcd:rust',
+              'xkcd:fuchsia', 'xkcd:pale purple', 'xkcd:crimson', 'xkcd:sage', 'xkcd:coral', 'xkcd:grape', 'xkcd:grass',
+              'xkcd:cornflower', 'xkcd:rose pink', 'xkcd:sky', 'xkcd:jade', 'xkcd:dull blue', 'xkcd:dark sky blue',
+              'xkcd:dark peach', 'xkcd:light lavender', 'xkcd:electric green', 'xkcd:slate grey', 'xkcd:teal green',
+              'xkcd:barney purple', 'xkcd:bright orange', 'xkcd:bluegreen', 'xkcd:blush', 'xkcd:lemon', 'xkcd:forest',
+              'xkcd:medium purple', 'xkcd:vermillion', 'xkcd:watermelon']
+    line_name = filter.split("/")[-1].split(".")[0].split("_")[-1].split('l')[-1]
+    total_value = 0
+    factor = 128
+    for char in line_name:
+        total_value = total_value * factor + ord(char)
+    return colors[total_value % len(colors)]
+
+
+def display_superposed_hist(values: dict[str,list[int | float]], fig_title: str, metric_names: list[str], save_img: str | None, save_only: bool, normalize: bool, sort_bars: bool):
+    fig = plt.figure(layout="constrained", figsize=(40, 24))
+    layout = "a;b;c;d;e;f"
+    axs = fig.subplot_mosaic(layout)
+    fig.suptitle(fig_title)
+
+    bar_width = 0.5
+    colors = ['xkcd:mauve', 'xkcd:teal', 'xkcd:purple', 'xkcd:forest green', 'xkcd:sky blue', 'xkcd:salmon',
+              'xkcd:dark red', 'xkcd:seafoam', 'xkcd:dark orange', 'xkcd:grey blue', 'xkcd:goldenrod', 'xkcd:rust',
+              'xkcd:fuchsia', 'xkcd:pale purple', 'xkcd:crimson', 'xkcd:sage', 'xkcd:coral', 'xkcd:grape', 'xkcd:grass',
+              'xkcd:cornflower', 'xkcd:rose pink', 'xkcd:sky', 'xkcd:jade', 'xkcd:dull blue', 'xkcd:dark sky blue',
+              'xkcd:dark peach', 'xkcd:light lavender', 'xkcd:electric green', 'xkcd:slate grey', 'xkcd:teal green',
+              'xkcd:barney purple', 'xkcd:bright orange', 'xkcd:darker green', 'xkcd:blush', 'xkcd:lemon', 'xkcd:forest',
+              ]
+    values = sorted(values.items(), key=lambda v: v[1][0], reverse=True)
+    values = [(k, v, get_line_color(k))
+              for c, (k, v) in zip(colors, values)]
+    for j, x in enumerate(layout.split(';')):
+        line_names = []
+        # axs[x].set_xlabel('Filter', fontsize=45)
+        y_axis_label = f"{metric_names[j]}"
+        axs[x].set_ylabel(y_axis_label, fontsize=15)
+        max_val = [min([v[1][i] for v in values]) for i in range(len(metric_names))]
+        min_val = [max([v[1][i] for v in values]) for i in range(len(metric_names))]
+        # values = OrderedDict(values.items())
+        values = sorted(values, key=lambda v: v[1][j], reverse=True)
+        br = np.arange(len(values))
+        for i, (k, v, c) in enumerate(values):
+            if normalize:
+                displayed_values = [(val - min_val[i])/(max_val[i] - min_val[i]) if (max_val[i] - min_val[i]) != 0 else 0 for i, val in enumerate(v)]
+            else:
+                displayed_values = v
+            label_values = [int(val * 100)/100 for val in v]
+            line_name = k.split("/")[-1].split(".")[0].split("_")[-1].split('l')[-1]
+            line_names.append(line_name)
+            plot = axs[x].bar(br[i], displayed_values[j], color=c, width=bar_width, label=line_name)
+            axs[x].bar_label(plot, labels=[v[j]], rotation=90)
+        axs[x].set_xticks([r for r in range(len(line_names))], line_names)
+        # plt.xticks([r + bar_width for r in range(len(line_names))], line_names)
+        # plt.legend()
 
     if not save_only:
         plt.show()
@@ -276,7 +341,7 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
                 first = True
                 for hist_attr in wanted_hist:
                     values_to_display = [e.get_measure_dict()[0][measure_name].__getattribute__(hist_attr) for e in val.values()]
-                    interesting_ones += sorted(list(val.items()), key=lambda tu: tu[1].get_measure_dict()[0][measure_name].__getattribute__(hist_attr))[:5]
+                    interesting_ones += sorted(list(val.items()), key=lambda tu: tu[1].get_measure_dict()[0][measure_name].__getattribute__(hist_attr))[-5:]
                     keys = [key.split("/")[-1].split(".filter")[0] for key in val.keys()]
                     folder_name = f"img/{measure_name}_{base}"
                     if not Path(folder_name).exists():
@@ -291,10 +356,10 @@ def write_summary(files_stats: dict[str, dict[int, dict[str, FileStats]]], out_f
                 folder_name = f"img/{measure_name}_{base}"
                 fn = f"{folder_name}/detailed_hist_{date}"
                 if not Path(fn).exists() or True:
-                    display_detailed_hist(interesting_ones, "Proportional difference", wanted_hist, fn, True, True)
+                    display_superposed_hist(interesting_ones, f"Most impactful lines for {folder_name} {date}", wanted_hist, fn, True, False, True)
                 fn = f"{folder_name}/detailed_hist_inv_{date}"
                 if not Path(fn).exists() or True:
-                    display_detailed_hist(interesting_ones_invert, "surface modified", list(interesting_ones.keys()), fn, True, True)
+                    display_detailed_hist(interesting_ones, "surface modified", wanted_hist, fn, True, True)
                 interesting_ones = []
     if print_result:
         print("\n".join(lines))
